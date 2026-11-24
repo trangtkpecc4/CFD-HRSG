@@ -1,0 +1,881 @@
+{
+  "metadata": {
+    "system_name": "Lò thu hồi nhiệt HRSG 3 cấp áp suất có quá nhiệt trung gian (Triple-Pressure Reheat HRSG)",
+    "configuration": "Horizontal Gas Flow, Natural Circulation, 8 Tube-Bank Modules, Integral Deaerator",
+    "hrsg_volume_m3": 11835,
+    "unit_prefix_note": "Tag sử dụng tiền tố P1 (Tổ máy 1); cấu trúc tương đương cho P2 (Tổ máy 2)",
+    "coordinate_system": "x: dọc dòng khói từ trái (GT Inlet) sang phải (Stack), y: cao độ (m), z: ngang lò (m)"
+  },
+  "heat_balance_cases": {
+    "BASE_100": {
+      "id": "BASE_100",
+      "name": "HB Base Load (100%)",
+      "gt_load_pct": 97.4,
+      "ambient_temp_c": 30.0,
+      "ambient_pressure_bara": 1.009,
+      "flue_gas": {
+        "mass_flow_tph": 2631.1,
+        "inlet_temp_c": 660.3,
+        "inlet_pressure_bara": 1.041,
+        "stack_temp_c": 80.3,
+        "stack_pressure_bara": 1.009,
+        "co2_wt_pct": 8.12,
+        "nox_mg_nm3": 51.0,
+        "sox_mg_nm3": 8.66,
+        "dust_mg_nm3": 4.58,
+        "module_inlet_temps_c": [634.3, 473.8, 360.9, 325.0, 254.5, 215.5, 167.2, 131.7]
+      },
+      "hp": {
+        "drum_p_bara": 171.1,
+        "drum_t_c": 352.8,
+        "steam_p_bara": 165.5,
+        "steam_t_c": 568.2,
+        "steam_flow_tph": 382.8,
+        "steam_h_kjkg": 3484.1,
+        "fw_flow_tph": 353.6,
+        "dsh_spray_tph": 0.0
+      },
+      "rh": {
+        "crh_p_bara": 36.6,
+        "crh_t_c": 339.9,
+        "crh_flow_tph": 369.5,
+        "crh_h_kjkg": 3076.1,
+        "hrh_p_bara": 35.0,
+        "hrh_t_c": 569.3,
+        "hrh_flow_tph": 416.3,
+        "hrh_h_kjkg": 3608.8,
+        "dsh_spray_tph": 0.0
+      },
+      "ip": {
+        "drum_p_bara": 37.8,
+        "drum_t_c": 247.1,
+        "steam_p_bara": 37.5,
+        "steam_t_c": 340.6,
+        "steam_flow_tph": 46.8,
+        "steam_h_kjkg": 3075.9,
+        "fw_flow_tph": 56.7
+      },
+      "lp": {
+        "drum_p_bara": 6.4,
+        "drum_t_c": 161.3,
+        "steam_p_bara": 5.86,
+        "steam_t_c": 290.6,
+        "steam_flow_tph": 42.6,
+        "steam_h_kjkg": 3042.9
+      },
+      "cph": {
+        "condensate_flow_tph": 522.8,
+        "inlet_temp_c": 45.4,
+        "mixed_inlet_temp_c": 60.0,
+        "outlet_temp_c": 157.6,
+        "recirc_flow_tph": 77.3
+      },
+      "bfp_total_tph": 480.2
+    },
+    "LOAD_85": {
+      "id": "LOAD_85",
+      "name": "HB 85% Load",
+      "gt_load_pct": 78.8,
+      "ambient_temp_c": 30.0,
+      "ambient_pressure_bara": 1.009,
+      "flue_gas": {
+        "mass_flow_tph": 2257.1,
+        "inlet_temp_c": 693.9,
+        "inlet_pressure_bara": 1.034,
+        "stack_temp_c": 70.2,
+        "stack_pressure_bara": 1.009,
+        "co2_wt_pct": 8.09,
+        "nox_mg_nm3": 51.0,
+        "sox_mg_nm3": 8.66,
+        "dust_mg_nm3": 4.58,
+        "module_inlet_temps_c": [666.0, 495.0, 368.0, 326.0, 250.0, 206.0, 155.0, 118.0]
+      },
+      "hp": {
+        "drum_p_bara": 162.3,
+        "drum_t_c": 348.5,
+        "steam_p_bara": 156.9,
+        "steam_t_c": 602.6,
+        "steam_flow_tph": 352.2,
+        "steam_h_kjkg": 3584.1,
+        "fw_flow_tph": 328.8,
+        "dsh_spray_tph": 0.0
+      },
+      "rh": {
+        "crh_p_bara": 33.8,
+        "crh_t_c": 365.0,
+        "crh_flow_tph": 340.1,
+        "crh_h_kjkg": 3143.4,
+        "hrh_p_bara": 32.3,
+        "hrh_t_c": 599.4,
+        "hrh_flow_tph": 376.4,
+        "hrh_h_kjkg": 3679.6,
+        "dsh_spray_tph": 0.0
+      },
+      "ip": {
+        "drum_p_bara": 34.5,
+        "drum_t_c": 241.7,
+        "steam_p_bara": 34.3,
+        "steam_t_c": 336.8,
+        "steam_flow_tph": 36.4,
+        "steam_h_kjkg": 3074.2,
+        "fw_flow_tph": 41.4
+      },
+      "lp": {
+        "drum_p_bara": 5.2,
+        "drum_t_c": 153.4,
+        "steam_p_bara": 5.0,
+        "steam_t_c": 291.3,
+        "steam_flow_tph": 25.1,
+        "steam_h_kjkg": 3046.5
+      },
+      "cph": {
+        "condensate_flow_tph": 538.3,
+        "inlet_temp_c": 46.3,
+        "mixed_inlet_temp_c": 60.0,
+        "outlet_temp_c": 142.0,
+        "recirc_flow_tph": 89.4
+      },
+      "bfp_total_tph": 430.6
+    },
+    "LOAD_50": {
+      "id": "LOAD_50",
+      "name": "HB 50% Load",
+      "gt_load_pct": 41.0,
+      "ambient_temp_c": 30.0,
+      "ambient_pressure_bara": 1.009,
+      "flue_gas": {
+        "mass_flow_tph": 1568.3,
+        "inlet_temp_c": 720.4,
+        "inlet_pressure_bara": 1.021,
+        "stack_temp_c": 64.7,
+        "stack_pressure_bara": 1.009,
+        "co2_wt_pct": 7.43,
+        "nox_mg_nm3": 51.0,
+        "sox_mg_nm3": 8.85,
+        "dust_mg_nm3": 4.58,
+        "module_inlet_temps_c": [692.0, 512.0, 358.0, 312.0, 232.0, 188.0, 142.0, 108.0]
+      },
+      "hp": {
+        "drum_p_bara": 117.0,
+        "drum_t_c": 322.7,
+        "steam_p_bara": 113.3,
+        "steam_t_c": 603.2,
+        "steam_flow_tph": 251.1,
+        "steam_h_kjkg": 3622.6,
+        "fw_flow_tph": 218.6,
+        "dsh_spray_tph": 22.0
+      },
+      "rh": {
+        "crh_p_bara": 24.8,
+        "crh_t_c": 371.2,
+        "crh_flow_tph": 242.4,
+        "crh_h_kjkg": 3175.4,
+        "hrh_p_bara": 23.7,
+        "hrh_t_c": 602.2,
+        "hrh_flow_tph": 275.8,
+        "hrh_h_kjkg": 3692.8,
+        "dsh_spray_tph": 6.8
+      },
+      "ip": {
+        "drum_p_bara": 25.3,
+        "drum_t_c": 224.7,
+        "steam_p_bara": 25.2,
+        "steam_t_c": 314.1,
+        "steam_flow_tph": 26.5,
+        "steam_h_kjkg": 3043.0,
+        "fw_flow_tph": 27.0
+      },
+      "lp": {
+        "drum_p_bara": 4.1,
+        "drum_t_c": 144.8,
+        "steam_p_bara": 4.06,
+        "steam_t_c": 282.8,
+        "steam_flow_tph": 13.0,
+        "steam_h_kjkg": 3031.7
+      },
+      "cph": {
+        "condensate_flow_tph": 383.1,
+        "inlet_temp_c": 41.0,
+        "mixed_inlet_temp_c": 60.0,
+        "outlet_temp_c": 130.2,
+        "recirc_flow_tph": 103.4
+      },
+      "bfp_total_tph": 310.0
+    }
+  },
+  "zones": [
+    {
+      "id": "EXHAUST_GAS",
+      "name": "Khu 1: Hệ thống Khói thải & Ống khói",
+      "short_name": "Khói thải & Stack",
+      "color": "#ef4444",
+      "pad": { "x": -18, "z": 0, "w": 56, "d": 18 },
+      "camera": { "target": [0, 12, 0], "yaw": -0.62, "pitch": 0.34, "dist": 58 }
+    },
+    {
+      "id": "HP_SH_RH",
+      "name": "Khu 2: Quá nhiệt Cao áp (HP SH) & Tái nhiệt (RH)",
+      "short_name": "HP SH & Reheater",
+      "color": "#f97316",
+      "pad": { "x": -11, "z": 0, "w": 9, "d": 14 },
+      "camera": { "target": [-11, 10, 0], "yaw": -0.5, "pitch": 0.28, "dist": 26 }
+    },
+    {
+      "id": "HP_EVAP",
+      "name": "Khu 3: Sinh hơi Cao áp (HP Evaporator & Drum)",
+      "short_name": "HP Evaporator",
+      "color": "#eab308",
+      "pad": { "x": -3, "z": 0, "w": 6, "d": 14 },
+      "camera": { "target": [-3, 14, 0], "yaw": -0.55, "pitch": 0.25, "dist": 26 }
+    },
+    {
+      "id": "HP_ECO",
+      "name": "Khu 4: Hâm nước Cao áp (HP Economizer #1-#8)",
+      "short_name": "HP Economizer",
+      "color": "#22c55e",
+      "pad": { "x": 3, "z": 0, "w": 6, "d": 14 },
+      "camera": { "target": [3, 9, 0], "yaw": -0.45, "pitch": 0.28, "dist": 25 }
+    },
+    {
+      "id": "IP_SYSTEM",
+      "name": "Khu 5: Hệ thống Trung áp (IP Eco / Evap / SH)",
+      "short_name": "Hệ thống IP",
+      "color": "#06b6d4",
+      "pad": { "x": 9, "z": 0, "w": 6, "d": 14 },
+      "camera": { "target": [9, 13, 0], "yaw": -0.5, "pitch": 0.26, "dist": 26 }
+    },
+    {
+      "id": "LP_SYSTEM",
+      "name": "Khu 6: Hệ thống Hạ áp & Bình khử khí (LP & DEA)",
+      "short_name": "LP & Deaerator",
+      "color": "#3b82f6",
+      "pad": { "x": 15, "z": 0, "w": 6, "d": 14 },
+      "camera": { "target": [15, 14, 0], "yaw": -0.5, "pitch": 0.26, "dist": 26 }
+    },
+    {
+      "id": "CPH_SYSTEM",
+      "name": "Khu 7: Gia nhiệt Nước ngưng (CPH & Bơm tuần hoàn)",
+      "short_name": "CPH & Bơm TH",
+      "color": "#8b5cf6",
+      "pad": { "x": 20, "z": 10, "w": 8, "d": 10 },
+      "camera": { "target": [20, 6, 9], "yaw": -0.75, "pitch": 0.35, "dist": 22 }
+    },
+    {
+      "id": "BLOWDOWN_UTILITY",
+      "name": "Khu 8: Xả đáy (CBD/IBD), Thoát nước & Phụ trợ",
+      "short_name": "Xả đáy & Phụ trợ",
+      "color": "#ec4899",
+      "pad": { "x": 2, "z": 12, "w": 16, "d": 9 },
+      "camera": { "target": [2, 5, 12], "yaw": -0.4, "pitch": 0.38, "dist": 24 }
+    }
+  ],
+  "equipment": [
+    {
+      "tag": "P1HNA91_DUCT",
+      "type": "exhaust_gas_system",
+      "name": "Kênh khói đầu vào & Bộ khuếch tán (Inlet Duct & Diffuser)",
+      "description": "Dẫn khói thải tuabin khí (660.3°C @Base Load) qua khớp giãn nở vào Module #1",
+      "zone": "EXHAUST_GAS",
+      "pos": [-21, 5.5, 0],
+      "size": [10, 9, 10]
+    },
+    {
+      "tag": "P1HNE91AA001",
+      "type": "exhaust_gas_system",
+      "name": "Van tiết lưu ống khói (Stack Damper)",
+      "description": "Van chắn giữ nhiệt khi dừng lò, giám sát vị trí mở/đóng bởi GS P1HNE91CG001~004",
+      "zone": "EXHAUST_GAS",
+      "pos": [26.5, 14, 0],
+      "size": [5.5, 1.2, 5.5]
+    },
+    {
+      "tag": "P1HNE91BS001",
+      "type": "exhaust_gas_system",
+      "name": "Ống khói & Bộ giảm thanh ống khói (Stack & Silencer)",
+      "description": "Ống khói chính cao ~55m kèm bộ giảm thanh, cổng đo EPA/CEMS (P1HNE91CQ201~204)",
+      "zone": "EXHAUST_GAS",
+      "pos": [26.5, 22, 0],
+      "size": [5.2, 38, 5.2]
+    },
+    {
+      "tag": "P1HNA91AT001",
+      "type": "exhaust_gas_system",
+      "name": "Máy hút ẩm bảo quản lò (Dehumidifier)",
+      "description": "Công suất 155 kW, thể tích lò 11,835 m³, thời gian hút ẩm 4 giờ khi bảo quản khô",
+      "zone": "EXHAUST_GAS",
+      "pos": [5, 1.5, -10.5],
+      "size": [3.2, 2.5, 2.2]
+    },
+    {
+      "tag": "P1HAH91_SH3",
+      "type": "superheater",
+      "name": "Bộ quá nhiệt cao áp #3 (HP Superheater #3)",
+      "description": "Module #1 - Nhận hơi từ HP SH #2 qua bộ giảm ôn, gia nhiệt đạt 568.2°C @165.5 barA",
+      "zone": "HP_SH_RH",
+      "pos": [-13.5, 9, 0],
+      "size": [2.2, 15, 11]
+    },
+    {
+      "tag": "P1HAJ91_HRH",
+      "type": "reheater",
+      "name": "Bộ tái nhiệt nóng (Hot Reheater)",
+      "description": "Module #1 - Gia nhiệt hơi tái nhiệt từ Cold RH qua bộ giảm ôn RH đạt 569.3°C @35.0 barA",
+      "zone": "HP_SH_RH",
+      "pos": [-11.0, 9, 0],
+      "size": [2.2, 15, 11]
+    },
+    {
+      "tag": "P1LAE91AH001",
+      "type": "superheater",
+      "name": "Bộ giảm ôn trung gian HP (HP Inter-Stage Desuperheater)",
+      "description": "Phun nước cấp cao áp điều chỉnh nhiệt độ hơi chính qua van TCV P1LAE91AA081/082",
+      "zone": "HP_SH_RH",
+      "pos": [-11.8, 17.8, 3.8],
+      "size": [1.8, 1.4, 1.4]
+    },
+    {
+      "tag": "P1LAF91AH001",
+      "type": "reheater",
+      "name": "Bộ giảm ôn trung gian RH (RH Inter-Stage Desuperheater)",
+      "description": "Phun nước cấp trung áp điều chỉnh nhiệt độ hơi tái nhiệt qua van TCV P1LAF91AA081/082",
+      "zone": "HP_SH_RH",
+      "pos": [-9.2, 17.8, -3.8],
+      "size": [1.8, 1.4, 1.4]
+    },
+    {
+      "tag": "P1HAH91_SH12",
+      "type": "superheater",
+      "name": "Bộ quá nhiệt cao áp #1 & #2 (HP SH #1 & #2)",
+      "description": "Module #2 - Quá nhiệt sơ cấp hơi bão hòa từ bao hơi HP (352.8°C → 395.1°C)",
+      "zone": "HP_SH_RH",
+      "pos": [-8.4, 9, 0],
+      "size": [2.4, 15, 11]
+    },
+    {
+      "tag": "P1HAJ91_CRH",
+      "type": "reheater",
+      "name": "Bộ tái nhiệt lạnh (Cold Reheater)",
+      "description": "Module #2 - Tiếp nhận hơi CRH từ tuabin HP (339.9°C) hòa trộn với hơi IP SH",
+      "zone": "HP_SH_RH",
+      "pos": [-6.2, 9, 0],
+      "size": [1.8, 15, 11]
+    },
+    {
+      "tag": "P1LBC81BS001",
+      "type": "reheater",
+      "name": "Bộ giảm thanh chung RH (RH Common Silencer)",
+      "description": "Giảm thanh cho van an toàn CRH (42.0/43.2 barA) và HRH (39.0 barA)",
+      "zone": "HP_SH_RH",
+      "pos": [-9.5, 21.5, 4.2],
+      "size": [1.6, 3.2, 1.6]
+    },
+    {
+      "tag": "P1HAD91_EVAP",
+      "type": "evaporator",
+      "name": "Dàn ống sinh hơi cao áp (HP Evaporator)",
+      "description": "Module #3 - Tuần hoàn tự nhiên nối giữa manifold dưới và bao hơi HP",
+      "zone": "HP_EVAP",
+      "pos": [-2.8, 9, 0],
+      "size": [3.2, 15, 11]
+    },
+    {
+      "tag": "P1HAD91BB001",
+      "type": "evaporator",
+      "name": "Bao hơi Cao áp (HP Steam Drum)",
+      "description": "Dung tích 51.2 m³, áp suất thiết kế 185 barA (vận hành 171.1 barA, 352.8°C), van an toàn PSV 185/190.5 barA",
+      "zone": "HP_EVAP",
+      "pos": [-2.8, 19.5, 0],
+      "size": [3.0, 3.0, 12.0]
+    },
+    {
+      "tag": "P1HAD91BS001",
+      "type": "evaporator",
+      "name": "Bộ giảm thanh chung HP (HP Common Silencer)",
+      "description": "Giảm thanh cho PSV bao hơi HP, PSV hơi chính HP (180 barA) và đường xả khí",
+      "zone": "HP_EVAP",
+      "pos": [-2.8, 22.8, 4.5],
+      "size": [1.8, 3.5, 1.8]
+    },
+    {
+      "tag": "P1HAC91_ECO58",
+      "type": "economizer",
+      "name": "Bộ hâm nước cao áp #5~#8 (HP Economizer #5~#8)",
+      "description": "Module #4 - Gia nhiệt nước cấp cao áp trước khi vào bao hơi HP (đạt 348.2°C), có nhánh trích tới FGH (C)",
+      "zone": "HP_ECO",
+      "pos": [1.8, 9, 0],
+      "size": [2.6, 15, 11]
+    },
+    {
+      "tag": "P1HAC91_ECO14",
+      "type": "economizer",
+      "name": "Bộ hâm nước cao áp #1~#4 (HP Economizer #1~#4)",
+      "description": "Module #5/#6 - Nhận nước cấp từ bơm HP/IP BFP qua trạm van LCV 100%A/100%B/30% (P1LAB91AA081~083)",
+      "zone": "HP_ECO",
+      "pos": [4.8, 9, 0],
+      "size": [2.4, 15, 11]
+    },
+    {
+      "tag": "P1LBA92_IPSH",
+      "type": "superheater",
+      "name": "Bộ quá nhiệt trung áp (IP Superheater)",
+      "description": "Module #4 - Quá nhiệt hơi IP từ 247.1°C lên 340.6°C @37.5 barA, cấp vào đường CRH qua PCV P1LBA92AA081",
+      "zone": "IP_SYSTEM",
+      "pos": [7.8, 9, 0],
+      "size": [1.6, 15, 11]
+    },
+    {
+      "tag": "P1HAD92_IPEVAP",
+      "type": "evaporator",
+      "name": "Dàn ống sinh hơi trung áp (IP Evaporator)",
+      "description": "Module #5 - Sinh hơi trung áp tuần hoàn tự nhiên cấp cho bao hơi IP",
+      "zone": "IP_SYSTEM",
+      "pos": [9.8, 9, 0],
+      "size": [1.8, 15, 11]
+    },
+    {
+      "tag": "P1HAD92BB001",
+      "type": "evaporator",
+      "name": "Bao hơi Trung áp (IP Steam Drum)",
+      "description": "Dung tích 20.3 m³, áp suất thiết kế 44 barA (vận hành 37.8 barA, 247.1°C)",
+      "zone": "IP_SYSTEM",
+      "pos": [9.2, 19.0, 0],
+      "size": [2.4, 2.4, 10.5]
+    },
+    {
+      "tag": "P1HAD92BS001",
+      "type": "evaporator",
+      "name": "Bộ giảm thanh chung IP (IP Common Silencer)",
+      "description": "Giảm thanh cho PSV bao hơi IP và PSV hơi quá nhiệt IP (41.0 barA)",
+      "zone": "IP_SYSTEM",
+      "pos": [9.2, 22.0, 4.0],
+      "size": [1.5, 3.0, 1.5]
+    },
+    {
+      "tag": "P1HAC94_IPECO",
+      "type": "economizer",
+      "name": "Bộ hâm nước trung áp #1~#2 (IP Economizer #1 & #2)",
+      "description": "Module #6 - Gia nhiệt nước cấp IP từ 161.7°C lên 239.8°C, cấp vào bao hơi IP qua van LCV P1HAC94AA081/082",
+      "zone": "IP_SYSTEM",
+      "pos": [11.8, 9, 0],
+      "size": [1.6, 15, 11]
+    },
+    {
+      "tag": "P1LBA95_LPSH",
+      "type": "superheater",
+      "name": "Bộ quá nhiệt hạ áp (LP Superheater)",
+      "description": "Module #6 - Quá nhiệt hơi LP từ 161.3°C lên 290.6°C @5.86 barA, có van ERV/PSV (8.8/9.0 barA)",
+      "zone": "LP_SYSTEM",
+      "pos": [14.0, 9, 0],
+      "size": [1.6, 15, 11]
+    },
+    {
+      "tag": "P1HAD93_LPEVAP",
+      "type": "evaporator",
+      "name": "Dàn ống sinh hơi hạ áp (LP Evaporator)",
+      "description": "Module #7 - Sinh hơi hạ áp cấp cho bao hơi LP và bình khử khí tích hợp",
+      "zone": "LP_SYSTEM",
+      "pos": [16.2, 9, 0],
+      "size": [2.2, 15, 11]
+    },
+    {
+      "tag": "P1HAD93BB001",
+      "type": "evaporator",
+      "name": "Bao hơi Hạ áp / Bồn chứa (LP Steam Drum / Storage Tank)",
+      "description": "Dung tích 185.5 m³, vận hành 6.4 barA / 161.3°C, cấp nước hút cho bơm HP/IP BFP",
+      "zone": "LP_SYSTEM",
+      "pos": [16.2, 18.8, 0],
+      "size": [3.4, 3.4, 12.0]
+    },
+    {
+      "tag": "P1LAA91BB001",
+      "type": "evaporator",
+      "name": "Bình khử khí tích hợp (Integral Deaerator)",
+      "description": "Dung tích 27.5 m³, lắp đặt trực tiếp trên bao hơi LP, có van hơi mồi Pegging Steam PCV P1LBC91AA081",
+      "zone": "LP_SYSTEM",
+      "pos": [16.2, 22.0, -2.0],
+      "size": [2.2, 3.4, 2.2]
+    },
+    {
+      "tag": "P1HAD93BS001",
+      "type": "evaporator",
+      "name": "Bộ giảm thanh chung LP (LP Common Silencer)",
+      "description": "Giảm thanh cho PSV bao hơi LP (11.0/11.3 barA), LP SH PSV/ERV và CBD PSV",
+      "zone": "LP_SYSTEM",
+      "pos": [16.2, 22.6, 4.2],
+      "size": [1.6, 3.0, 1.6]
+    },
+    {
+      "tag": "P1LBA95BS001",
+      "type": "superheater",
+      "name": "Bộ giảm thanh khởi động LP (LP Start-up Silencer)",
+      "description": "Giảm thanh cho van xả khởi động hơi LP PCV P1LBA95AA081",
+      "zone": "LP_SYSTEM",
+      "pos": [14.0, 21.8, 4.2],
+      "size": [1.4, 2.6, 1.4]
+    },
+    {
+      "tag": "P1LCC10_CPH14",
+      "type": "condensate_preheater",
+      "name": "Bộ gia nhiệt nước ngưng #1~#4 (Condensate Preheater #1~#4)",
+      "description": "Module #8 - Thu hồi nhiệt khói đuôi (131.7°C → 80.3°C), gia nhiệt nước ngưng từ 60°C lên 157.6°C",
+      "zone": "CPH_SYSTEM",
+      "pos": [19.8, 9, 0],
+      "size": [3.4, 15, 11]
+    },
+    {
+      "tag": "P1LCB10AP001",
+      "type": "pump",
+      "name": "Bơm tuần hoàn CPH A (CPH Recirculation Pump A)",
+      "description": "Bơm tuần hoàn 100% duy trì nhiệt độ nước ngưng vào CPH >= 60°C chống ăn mòn điểm sương axit",
+      "zone": "CPH_SYSTEM",
+      "pos": [18.5, 1.5, 10.5],
+      "size": [1.8, 1.6, 1.4]
+    },
+    {
+      "tag": "P1LCB10AP002",
+      "type": "pump",
+      "name": "Bơm tuần hoàn CPH B (CPH Recirculation Pump B)",
+      "description": "Bơm tuần hoàn 100% dự phòng nóng cho bơm A, khởi động tự động khi bơm A sự cố",
+      "zone": "CPH_SYSTEM",
+      "pos": [21.5, 1.5, 10.5],
+      "size": [1.8, 1.6, 1.4]
+    },
+    {
+      "tag": "P1LCQ91BB001",
+      "type": "blowdown_system",
+      "name": "Bồn xả đáy liên tục (Continuous Blowdown Tank - CBD)",
+      "description": "Dung tích 3.4 m³, thu hồi hơi flash về bao hơi LP, xả nước sang IBD qua van LCV P1LCQ91AA081",
+      "zone": "BLOWDOWN_UTILITY",
+      "pos": [-2.5, 3.2, 12.0],
+      "size": [2.2, 4.5, 2.2]
+    },
+    {
+      "tag": "P1LCQ92BB001",
+      "type": "blowdown_system",
+      "name": "Bồn xả đáy gián đoạn (Intermittent Blowdown Tank - IBD)",
+      "description": "Dung tích 25.3 m³, tiếp nhận xả đáy định kỳ & drain HP/IP/LP, làm mát nước phun qua TCV P1GHD91AA081",
+      "zone": "BLOWDOWN_UTILITY",
+      "pos": [2.2, 3.0, 12.0],
+      "size": [5.2, 3.2, 3.0]
+    },
+    {
+      "tag": "P1LCQ92BS001",
+      "type": "blowdown_system",
+      "name": "Bộ giảm thanh bồn xả đáy (BD Tank Silencer)",
+      "description": "Giảm thanh hơi thoát đỉnh bồn xả đáy gián đoạn IBD",
+      "zone": "BLOWDOWN_UTILITY",
+      "pos": [2.2, 7.2, 12.0],
+      "size": [1.5, 3.6, 1.5]
+    },
+    {
+      "tag": "P1LCQ93AP001",
+      "type": "pump",
+      "name": "Bơm chuyển nước xả đáy A (BD Transfer Pump A)",
+      "description": "Công suất 100 m³/h (100% vận hành), bơm nước đã làm mát (<60°C) tới hệ thống xử lý nước thải",
+      "zone": "BLOWDOWN_UTILITY",
+      "pos": [6.8, 1.4, 10.8],
+      "size": [1.6, 1.4, 1.2]
+    },
+    {
+      "tag": "P1LCQ93AP002",
+      "type": "pump",
+      "name": "Bơm chuyển nước xả đáy B (BD Transfer Pump B)",
+      "description": "Công suất 100 m³/h (100% dự phòng), tự động chạy khi mức bồn IBD cao hoặc bơm A dừng",
+      "zone": "BLOWDOWN_UTILITY",
+      "pos": [6.8, 1.4, 13.2],
+      "size": [1.6, 1.4, 1.2]
+    },
+    {
+      "tag": "P1SHM91_DRAIN",
+      "type": "drain_system",
+      "name": "Hệ thống ống góp thoát nước (Drain & Funnel Headers)",
+      "description": "6 tuyến ống góp DN50 (P1SHM91~96): Silencer, BD Pump, CPH Pump, PSV, Drum Gauge và Funnel Drain ra mương",
+      "zone": "BLOWDOWN_UTILITY",
+      "pos": [10.0, 0.8, 12.0],
+      "size": [3.0, 1.0, 4.0]
+    },
+    {
+      "tag": "P1PGB91_UTIL",
+      "type": "utility_system",
+      "name": "Trạm phụ trợ (CCW, Khí điều khiển IA, Khí dịch vụ SA, Nước SW)",
+      "description": "Cấp nước làm mát kín cho 4 bơm (BD/CPH), khí điều khiển P1QFB91 cho 20 van điều khiển và nước làm mát xả đáy",
+      "zone": "BLOWDOWN_UTILITY",
+      "pos": [-6.5, 1.8, 12.0],
+      "size": [3.2, 2.4, 3.2]
+    }
+  ],
+  "lines": [
+    {
+      "id": "LINE_FLUE_GAS",
+      "from": "P1HNA91_DUCT",
+      "to": "P1HNE91BS001",
+      "medium": "flue_gas",
+      "label": "Khói thải GT (660°C → 80°C)",
+      "flow_tag": "FG_FLOW",
+      "path": [[-26, 5.5, 0], [-14, 9, 0], [0, 9, 0], [16, 9, 0], [23, 9, 0], [26.5, 14, 0], [26.5, 38, 0]]
+    },
+    {
+      "id": "LINE_CONDENSATE_IN",
+      "from": "P1LCC10_CPH14",
+      "to": "P1LAA91BB001",
+      "medium": "condensate",
+      "label": "Nước ngưng từ CPH lên Bình khử khí",
+      "flow_tag": "P1LCA10CF901",
+      "path": [[24, 3, 5], [20.5, 3, 5], [19.8, 15, 3], [16.2, 22, -1]]
+    },
+    {
+      "id": "LINE_CPH_RECIRC",
+      "from": "P1LCC10_CPH14",
+      "to": "P1LCB10AP001",
+      "medium": "condensate",
+      "label": "Tuần hoàn CPH (giữ T_in >= 60°C)",
+      "flow_tag": "P1LCB30CF901",
+      "path": [[19.5, 15, 5], [19.5, 2, 10.5], [21.5, 2, 10.5], [21.5, 3, 5]]
+    },
+    {
+      "id": "LINE_LP_STEAM",
+      "from": "P1HAD93BB001",
+      "to": "P1LBA95_LPSH",
+      "medium": "lp_steam",
+      "label": "Hơi hạ áp (LP Steam 5.86 barA)",
+      "flow_tag": "P1LBA95CF901",
+      "path": [[16.2, 19.5, 0], [14.0, 17, 0], [14.0, 17, -7.5]]
+    },
+    {
+      "id": "LINE_IP_FW",
+      "from": "P1HAD93BB001",
+      "to": "P1HAC94_IPECO",
+      "medium": "feedwater",
+      "label": "Nước cấp trung áp (IP FW)",
+      "flow_tag": "P1LAB95CF901",
+      "path": [[16.2, 17, 6], [11.8, 4, 6], [11.8, 16, 2], [9.2, 19.0, 1]]
+    },
+    {
+      "id": "LINE_IP_STEAM",
+      "from": "P1HAD92BB001",
+      "to": "P1HAJ91_CRH",
+      "medium": "ip_steam",
+      "label": "Hơi trung áp (IP SH → CRH)",
+      "flow_tag": "P1LBA92CF901",
+      "path": [[9.2, 19.5, 0], [7.8, 16.5, 0], [-6.2, 16.5, -4]]
+    },
+    {
+      "id": "LINE_HP_FW",
+      "from": "P1HAD93BB001",
+      "to": "P1HAD91BB001",
+      "medium": "feedwater",
+      "label": "Nước cấp cao áp (BFP → HP Eco → HP Drum)",
+      "flow_tag": "P1LAB91CF901",
+      "path": [[14, 2, 7.5], [4.8, 4, 6], [1.8, 16, 4], [-2.8, 19.5, 2]]
+    },
+    {
+      "id": "LINE_HP_STEAM",
+      "from": "P1HAD91BB001",
+      "to": "P1HAH91_SH3",
+      "medium": "hp_steam",
+      "label": "Hơi chính Cao áp (165.5 barA, 568.2°C)",
+      "flow_tag": "P1LBA91CF901",
+      "path": [[-2.8, 20.5, 0], [-8.4, 17, 0], [-11.8, 17.8, 3.8], [-13.5, 17, 0], [-13.5, 17, -8]]
+    },
+    {
+      "id": "LINE_RH_STEAM",
+      "from": "P1HAJ91_CRH",
+      "to": "P1HAJ91_HRH",
+      "medium": "rh_steam",
+      "label": "Hơi Tái nhiệt (CRH → DSH → HRH 569.3°C)",
+      "flow_tag": "RH_FLOW",
+      "path": [[-6.2, 16.5, -7.5], [-6.2, 16.5, -3.5], [-9.2, 17.8, -3.8], [-11.0, 17, 0], [-11.0, 17, -8]]
+    },
+    {
+      "id": "LINE_CBD_IBD",
+      "from": "P1HAD91BB001",
+      "to": "P1LCQ92BB001",
+      "medium": "blowdown",
+      "label": "Xả đáy liên tục & gián đoạn (HP/IP/LP → CBD/IBD)",
+      "flow_tag": "BD_FLOW",
+      "path": [[-2.8, 18, 6], [-2.5, 4.5, 12], [2.2, 3.0, 12], [6.8, 1.4, 12], [11, 1.4, 12]]
+    }
+  ],
+  "instruments": [
+    { "tag": "P1HNA91CT901", "type": "TIA", "description": "Nhiệt độ khói thải đầu vào HRSG", "unit": "°C", "zone": "EXHAUST_GAS", "is_control_loop": false, "actuator": null, "setpoint_base": 660.3 },
+    { "tag": "P1HNA91CP901", "type": "PIA", "description": "Áp suất khói đầu vào HRSG (độ sụt áp lò)", "unit": "barA", "zone": "EXHAUST_GAS", "is_control_loop": false, "actuator": "P1HNE91AA001", "setpoint_base": 1.041 },
+    { "tag": "P1HNE91CT001", "type": "TI", "description": "Nhiệt độ khói thải đỉnh ống khói", "unit": "°C", "zone": "EXHAUST_GAS", "is_control_loop": false, "actuator": null, "setpoint_base": 80.3 },
+    { "tag": "P1HNE91CG001", "type": "GS", "description": "Độ mở van tiết lưu ống khói (Stack Damper)", "unit": "%", "zone": "EXHAUST_GAS", "is_control_loop": true, "actuator": "P1HNE91AA001", "setpoint_base": 100.0 },
+
+    { "tag": "P1LBA91CT901", "type": "TIC", "description": "Nhiệt độ hơi chính HP ra tuabin", "unit": "°C", "zone": "HP_SH_RH", "is_control_loop": true, "actuator": "P1LAE91AA081", "setpoint_base": 568.2 },
+    { "tag": "P1LBA91CP901", "type": "PIA", "description": "Áp suất hơi chính HP", "unit": "barA", "zone": "HP_SH_RH", "is_control_loop": false, "actuator": null, "setpoint_base": 165.5 },
+    { "tag": "P1LBA91CF901", "type": "FI", "description": "Lưu lượng hơi chính HP", "unit": "t/h", "zone": "HP_SH_RH", "is_control_loop": false, "actuator": null, "setpoint_base": 382.8 },
+    { "tag": "P1LAE91CF901", "type": "FI", "description": "Lưu lượng nước phun giảm ôn HP", "unit": "t/h", "zone": "HP_SH_RH", "is_control_loop": false, "actuator": "P1LAE91AA081", "setpoint_base": 0.0 },
+    { "tag": "P1LBB91CT911", "type": "TIC", "description": "Nhiệt độ hơi tái nhiệt nóng HRH", "unit": "°C", "zone": "HP_SH_RH", "is_control_loop": true, "actuator": "P1LAF91AA081", "setpoint_base": 569.3 },
+    { "tag": "P1LBB91CP901", "type": "PI", "description": "Áp suất hơi tái nhiệt nóng HRH", "unit": "barA", "zone": "HP_SH_RH", "is_control_loop": false, "actuator": null, "setpoint_base": 35.0 },
+    { "tag": "P1LAF91CF901", "type": "FI", "description": "Lưu lượng nước phun giảm ôn RH", "unit": "t/h", "zone": "HP_SH_RH", "is_control_loop": false, "actuator": "P1LAF91AA081", "setpoint_base": 0.0 },
+
+    { "tag": "P1HAD91CL911", "type": "LIC", "description": "Mức nước bao hơi Cao áp (HP Drum Level)", "unit": "mm", "zone": "HP_EVAP", "is_control_loop": true, "actuator": "P1LAB91AA081", "setpoint_base": 0.0 },
+    { "tag": "P1HAD91CP901", "type": "PIA", "description": "Áp suất bao hơi Cao áp", "unit": "barA", "zone": "HP_EVAP", "is_control_loop": false, "actuator": null, "setpoint_base": 171.1 },
+    { "tag": "P1HAD91CT001", "type": "TI", "description": "Nhiệt độ kim loại bao hơi HP", "unit": "°C", "zone": "HP_EVAP", "is_control_loop": false, "actuator": null, "setpoint_base": 352.8 },
+
+    { "tag": "P1LAB91CF901", "type": "FI", "description": "Lưu lượng nước cấp Cao áp vào HP Eco", "unit": "t/h", "zone": "HP_ECO", "is_control_loop": true, "actuator": "P1LAB91AA081", "setpoint_base": 353.6 },
+    { "tag": "P1HAC91CT901", "type": "TI", "description": "Nhiệt độ nước ra HP Economizer #8", "unit": "°C", "zone": "HP_ECO", "is_control_loop": false, "actuator": null, "setpoint_base": 348.2 },
+    { "tag": "P1LAB93CT911", "type": "TIC", "description": "Điều khiển van bypass HP Economizer (chống sôi)", "unit": "°C", "zone": "HP_ECO", "is_control_loop": true, "actuator": "P1LAB93AA081", "setpoint_base": 340.0 },
+
+    { "tag": "P1HAD92CL911", "type": "LIC", "description": "Mức nước bao hơi Trung áp (IP Drum Level)", "unit": "mm", "zone": "IP_SYSTEM", "is_control_loop": true, "actuator": "P1HAC94AA081", "setpoint_base": 0.0 },
+    { "tag": "P1HAD92CP901", "type": "PIA", "description": "Áp suất bao hơi Trung áp", "unit": "barA", "zone": "IP_SYSTEM", "is_control_loop": false, "actuator": null, "setpoint_base": 37.8 },
+    { "tag": "P1LBA92CP911", "type": "PIC", "description": "Áp suất hơi quá nhiệt IP (vào CRH)", "unit": "barA", "zone": "IP_SYSTEM", "is_control_loop": true, "actuator": "P1LBA92AA081", "setpoint_base": 37.5 },
+    { "tag": "P1LBA92CF901", "type": "FI", "description": "Lưu lượng hơi quá nhiệt IP", "unit": "t/h", "zone": "IP_SYSTEM", "is_control_loop": false, "actuator": null, "setpoint_base": 46.8 },
+    { "tag": "P1LAB95CF901", "type": "FI", "description": "Lưu lượng nước cấp Trung áp", "unit": "t/h", "zone": "IP_SYSTEM", "is_control_loop": false, "actuator": "P1HAC94AA081", "setpoint_base": 56.7 },
+
+    { "tag": "P1HAD93CL911", "type": "LIC", "description": "Mức nước bao hơi Hạ áp / Bồn khử khí", "unit": "mm", "zone": "LP_SYSTEM", "is_control_loop": true, "actuator": "P1LCC91AA081", "setpoint_base": 0.0 },
+    { "tag": "P1HAD93CP901", "type": "PIA", "description": "Áp suất bao hơi Hạ áp / Bình khử khí", "unit": "barA", "zone": "LP_SYSTEM", "is_control_loop": true, "actuator": "P1LBC91AA081", "setpoint_base": 6.4 },
+    { "tag": "P1LBA95CT901", "type": "TI", "description": "Nhiệt độ hơi quá nhiệt Hạ áp", "unit": "°C", "zone": "LP_SYSTEM", "is_control_loop": false, "actuator": null, "setpoint_base": 290.6 },
+    { "tag": "P1LBA95CF901", "type": "FI", "description": "Lưu lượng hơi quá nhiệt Hạ áp", "unit": "t/h", "zone": "LP_SYSTEM", "is_control_loop": false, "actuator": null, "setpoint_base": 42.6 },
+
+    { "tag": "P1LCA10CF901", "type": "FI", "description": "Lưu lượng nước ngưng vào CPH", "unit": "t/h", "zone": "CPH_SYSTEM", "is_control_loop": false, "actuator": null, "setpoint_base": 522.8 },
+    { "tag": "P1LCB30CT901", "type": "TIC", "description": "Nhiệt độ nước ngưng hòa trộn đầu vào CPH", "unit": "°C", "zone": "CPH_SYSTEM", "is_control_loop": true, "actuator": "P1LCB30AA081", "setpoint_base": 60.0 },
+    { "tag": "P1LCB30CF901", "type": "FI", "description": "Lưu lượng tuần hoàn CPH", "unit": "t/h", "zone": "CPH_SYSTEM", "is_control_loop": false, "actuator": "P1LCB10AP001", "setpoint_base": 77.3 },
+    { "tag": "P1LCC10CT001", "type": "TI", "description": "Nhiệt độ nước ngưng ra khỏi CPH", "unit": "°C", "zone": "CPH_SYSTEM", "is_control_loop": false, "actuator": null, "setpoint_base": 157.6 },
+
+    { "tag": "P1LCQ91CL911", "type": "LIC", "description": "Mức nước bồn xả đáy liên tục (CBD)", "unit": "%", "zone": "BLOWDOWN_UTILITY", "is_control_loop": true, "actuator": "P1LCQ91AA081", "setpoint_base": 50.0 },
+    { "tag": "P1LCQ92CL911", "type": "LIC", "description": "Mức nước bồn xả đáy gián đoạn (IBD)", "unit": "%", "zone": "BLOWDOWN_UTILITY", "is_control_loop": false, "actuator": "P1LCQ93AP001", "setpoint_base": 45.0 },
+    { "tag": "P1GHD91CT911", "type": "TIC", "description": "Nhiệt độ nước bồn IBD (làm mát xả thải)", "unit": "°C", "zone": "BLOWDOWN_UTILITY", "is_control_loop": true, "actuator": "P1GHD91AA081", "setpoint_base": 55.0 }
+  ],
+  "scenarios": [
+    {
+      "id": "SC_EXHAUST_GAS",
+      "zone": "EXHAUST_GAS",
+      "title": "Sự cố kẹt đóng một phần Van tiết lưu ống khói (Stack Damper)",
+      "duration_s": 60,
+      "situation": "Trong lúc vận hành Base Load, van tiết lưu ống khói P1HNE91AA001 bị kẹt trượt về vị trí 42% độ mở, gây tăng áp suất ngược kênh khói và tăng mạnh vận tốc cục bộ.",
+      "progression": "Áp suất đầu vào P1HNA91CP901 tăng vượt 1.075 barA (nguy cơ trip Tuabin khí do áp suất ngược cao), nhiệt độ khói thoát tăng và phân bố CFD bị xoáy quẩn ở Module #7-#8.",
+      "correct_action": "Chuyển điều khiển Stack Damper P1HNE91CG001 sang MAN/MỞ CƯỠNG BỨC về 100% (hoặc bấm nút MỞ KHẨN CẤP P1HNE91AA001 trên DCS) để giải tỏa áp suất ngược kênh khói.",
+      "criteria": [
+        { "tag": "P1HNE91CG001", "op": ">=", "target": 95.0, "label": "Độ mở Stack Damper P1HNE91CG001 >= 95%" },
+        { "tag": "P1HNA91CP901", "op": "<=", "target": 1.050, "label": "Áp suất khói vào P1HNA91CP901 <= 1.050 barA" },
+        { "tag": "P1HNE91CT001", "op": "<=", "target": 88.0, "label": "Nhiệt độ khói đỉnh ống khói P1HNE91CT001 <= 88°C" }
+      ]
+    },
+    {
+      "id": "SC_HP_SH_RH",
+      "zone": "HP_SH_RH",
+      "title": "Quá nhiệt hơi chính HP & Hơi tái nhiệt HRH khi giảm tải nhanh (50% Load)",
+      "duration_s": 60,
+      "situation": "Tổ máy giảm tải xuống 50% khiến nhiệt độ khói đầu vào GT tăng vọt lên 720.4°C, đồng thời vòng điều khiển giảm ôn HP (P1LBA91CT901) bị chuyển nhầm sang MAN (đóng van 0%).",
+      "progression": "Nhiệt độ hơi chính HP P1LBA91CT901 vọt lên trên 625°C (vượt giới hạn kim loại 615°C), nguy cơ gây biến dạng nhiệt dàn ống HP SH #3 và rotor tuabin HP.",
+      "correct_action": "Mở van phun giảm ôn HP P1LAE91AA081 (hoặc chuyển bộ điều khiển P1LBA91CT901 sang AUTO với SP <= 603°C) để đưa lưu lượng phun P1LAE91CF901 đạt >= 18 t/h và hạ nhiệt hơi chính.",
+      "criteria": [
+        { "tag": "P1LBA91CT901", "op": "<=", "target": 608.0, "label": "Nhiệt độ hơi chính HP P1LBA91CT901 <= 608°C" },
+        { "tag": "P1LAE91CF901", "op": ">=", "target": 15.0, "label": "Lưu lượng phun giảm ôn HP P1LAE91CF901 >= 15 t/h" },
+        { "tag": "P1LBB91CT911", "op": "<=", "target": 608.0, "label": "Nhiệt độ hơi tái nhiệt HRH P1LBB91CT911 <= 608°C" }
+      ]
+    },
+    {
+      "id": "SC_HP_EVAP",
+      "zone": "HP_EVAP",
+      "title": "Tụt mức nước Bao hơi Cao áp (HP Drum Low Level)",
+      "duration_s": 60,
+      "situation": "Van cấp nước cao áp chính P1LAB91AA081 bị kẹt ở mức 40% (chế độ MAN) trong khi lò đang phát 382.8 t/h hơi chính.",
+      "progression": "Lưu lượng nước cấp P1LAB91CF901 sụt xuống ~210 t/h, mức nước bao hơi P1HAD91CL911 tụt nhanh dưới -150 mm (ngưỡng cảnh báo thấp-thấp -200 mm gây trip lò).",
+      "correct_action": "Chuyển vòng điều khiển mức bao hơi HP P1HAD91CL911 về AUTO (SP = 0 mm) hoặc tăng tay độ mở van cấp nước P1LAB91AA081 lên >= 75% để khôi phục cân bằng lưu lượng.",
+      "criteria": [
+        { "tag": "P1HAD91CL911", "op": ">=", "target": -45.0, "label": "Mức bao hơi HP P1HAD91CL911 >= -45 mm" },
+        { "tag": "P1HAD91CL911", "op": "<=", "target": 55.0, "label": "Mức bao hơi HP P1HAD91CL911 <= +55 mm" },
+        { "tag": "P1LAB91CF901", "op": ">=", "target": 340.0, "label": "Lưu lượng nước cấp HP P1LAB91CF901 >= 340 t/h" }
+      ]
+    },
+    {
+      "id": "SC_HP_ECO",
+      "zone": "HP_ECO",
+      "title": "Nguy cơ sôi nước trong bộ hâm nước HP Economizer (Steaming)",
+      "duration_s": 60,
+      "situation": "Ở chế độ tải thấp, nhiệt độ nước ra HP Eco #8 (P1HAC91CT901) tiệm cận nhiệt độ bão hòa (352.8°C) do van bypass P1LAB93AA081 bị khóa ở chế độ MAN = 0%.",
+      "progression": "Nhiệt độ nước ra HP Eco tăng vượt 350°C gây búa nước (water hammer) và dao động áp suất đường cấp nước cao áp.",
+      "correct_action": "Chuyển vòng điều khiển bypass HP Eco P1LAB93CT911 sang AUTO (SP = 338°C) hoặc mở van bypass P1LAB93AA081 >= 35% để giảm nhiệt độ đầu ra HP Eco.",
+      "criteria": [
+        { "tag": "P1HAC91CT901", "op": "<=", "target": 344.0, "label": "Nhiệt độ ra HP Eco P1HAC91CT901 <= 344°C" },
+        { "tag": "P1HAD91CL911", "op": ">=", "target": -60.0, "label": "Mức bao hơi HP ổn định >= -60 mm" },
+        { "tag": "P1LAB91CF901", "op": ">=", "target": 310.0, "label": "Lưu lượng nước cấp HP >= 310 t/h" }
+      ]
+    },
+    {
+      "id": "SC_IP_SYSTEM",
+      "zone": "IP_SYSTEM",
+      "title": "Quá áp hơi trung áp IP do kẹt đóng van điều áp P1LBA92AA081",
+      "duration_s": 60,
+      "situation": "Van điều khiển áp suất hơi IP ra đường CRH (P1LBA92AA081) bị chuyển sang MAN và đóng còn 20%.",
+      "progression": "Áp suất bao hơi IP (P1HAD92CP901) và hơi IP SH (P1LBA92CP911) tăng vọt vượt 40.5 barA (tiệm cận ngưỡng bật van an toàn PSV 41.0 barA), lưu lượng hơi IP sụt mạnh.",
+      "correct_action": "Chuyển vòng điều khiển áp suất IP P1LBA92CP911 sang AUTO (SP = 37.5 barA) hoặc mở van P1LBA92AA081 >= 65% để xả hơi IP vào đường CRH.",
+      "criteria": [
+        { "tag": "P1LBA92CP911", "op": "<=", "target": 38.5, "label": "Áp suất hơi IP P1LBA92CP911 <= 38.5 barA" },
+        { "tag": "P1HAD92CP901", "op": "<=", "target": 39.0, "label": "Áp suất bao hơi IP P1HAD92CP901 <= 39.0 barA" },
+        { "tag": "P1LBA92CF901", "op": ">=", "target": 40.0, "label": "Lưu lượng hơi IP P1LBA92CF901 >= 40 t/h" }
+      ]
+    },
+    {
+      "id": "SC_LP_SYSTEM",
+      "zone": "LP_SYSTEM",
+      "title": "Sụt áp Bình khử khí / Bao hơi LP khi thiếu hơi mồi (Pegging Steam)",
+      "duration_s": 60,
+      "situation": "Nước ngưng lạnh tăng đột ngột vào bình khử khí trong khi van hơi mồi Pegging Steam P1LBC91AA081 bị kẹt ở chế độ MAN = 0%.",
+      "progression": "Áp suất bao hơi LP / bình khử khí P1HAD93CP901 tụt xuống dưới 4.8 barA, làm giảm cột áp hút NPSH cho bơm HP/IP BFP và giảm hiệu quả khử oxy.",
+      "correct_action": "Chuyển bộ điều khiển áp suất LP/DEA P1HAD93CP901 sang AUTO (SP = 6.4 barA) hoặc mở van Pegging Steam P1LBC91AA081 >= 55%.",
+      "criteria": [
+        { "tag": "P1HAD93CP901", "op": ">=", "target": 5.8, "label": "Áp suất LP Drum/DEA P1HAD93CP901 >= 5.8 barA" },
+        { "tag": "P1HAD93CL911", "op": ">=", "target": -60.0, "label": "Mức nước bao hơi LP P1HAD93CL911 >= -60 mm" },
+        { "tag": "P1LBA95CF901", "op": ">=", "target": 35.0, "label": "Lưu lượng hơi LP P1LBA95CF901 >= 35 t/h" }
+      ]
+    },
+    {
+      "id": "SC_CPH_SYSTEM",
+      "zone": "CPH_SYSTEM",
+      "title": "Dừng sự cố Bơm tuần hoàn CPH A - Nguy cơ ăn mòn điểm sương",
+      "duration_s": 60,
+      "situation": "Bơm tuần hoàn CPH A (P1LCB10AP001) bị nhảy bảo vệ (TRIP) trong khi bơm dự phòng B (P1LCB10AP002) chưa tự động khởi động.",
+      "progression": "Lưu lượng tuần hoàn P1LCB30CF901 tụt về 0 t/h, nhiệt độ nước ngưng vào CPH (P1LCB30CT901) tụt xuống ~45.4°C (dưới ngưỡng điểm sương 55°C gây ngưng tụ axit ăn mòn ống Module #8).",
+      "correct_action": "Khởi động ngay Bơm tuần hoàn CPH B (START P1LCB10AP002) trên màn hình DCS khu CPH và đảm bảo vòng điều khiển nhiệt độ P1LCB30CT901 ở chế độ AUTO (SP = 60°C).",
+      "criteria": [
+        { "tag": "P1LCB30CF901", "op": ">=", "target": 60.0, "label": "Lưu lượng tuần hoàn CPH P1LCB30CF901 >= 60 t/h" },
+        { "tag": "P1LCB30CT901", "op": ">=", "target": 58.0, "label": "Nhiệt độ nước vào CPH P1LCB30CT901 >= 58°C" },
+        { "tag": "P1LCC10CT001", "op": ">=", "target": 150.0, "label": "Nhiệt độ nước ra CPH P1LCC10CT001 >= 150°C" }
+      ]
+    },
+    {
+      "id": "SC_BLOWDOWN_UTILITY",
+      "zone": "BLOWDOWN_UTILITY",
+      "title": "Quá nhiệt & Dâng mức Bồn xả đáy gián đoạn (IBD) khi dừng bơm xả A",
+      "duration_s": 60,
+      "situation": "Xảy ra xả đáy mạnh từ HP/IP Drum làm nước nóng tràn vào bồn IBD, đồng thời Bơm chuyển xả đáy A (P1LCQ93AP001) bị dừng và van nước làm mát P1GHD91AA081 bị kẹt đóng (MAN 0%).",
+      "progression": "Mức bồn IBD (P1LCQ92CL911) dâng vượt 82% và nhiệt độ nước xả (P1GHD91CT911) tăng vọt trên 78°C (vượt chuẩn xả thải < 60°C).",
+      "correct_action": "Khởi động Bơm chuyển xả đáy B (START P1LCQ93AP002) để hạ mức bồn IBD và chuyển vòng điều khiển nhiệt độ P1GHD91CT911 sang AUTO (hoặc mở van nước làm mát P1GHD91AA081 >= 60%).",
+      "criteria": [
+        { "tag": "P1LCQ92CL911", "op": "<=", "target": 60.0, "label": "Mức bồn IBD P1LCQ92CL911 <= 60%" },
+        { "tag": "P1GHD91CT911", "op": "<=", "target": 60.0, "label": "Nhiệt độ nước xả IBD P1GHD91CT911 <= 60°C" },
+        { "tag": "P1LCQ91CL911", "op": "<=", "target": 65.0, "label": "Mức bồn CBD P1LCQ91CL911 <= 65%" }
+      ]
+    }
+  ],
+  "uncertain_points": [
+    {
+      "sheet": "HP / IP / LP Economizer & CPH P&IDs",
+      "item": "Áp suất vận hành chi tiết một số điểm (OP1 CASE)",
+      "status": "CHƯA RÕ",
+      "note": "Trên bảng OPERATING CONDITION của P&ID ghi 'LATER' cho áp suất tại một số nhánh nước cấp; mô phỏng sử dụng giá trị chuẩn từ sơ đồ Cân bằng nhiệt (HBD) và áp suất bao hơi tương ứng."
+    },
+    {
+      "sheet": "HP Superheater & Reheater Desuperheater P&IDs",
+      "item": "Kích thước đường ống nhánh phun giảm ôn",
+      "status": "CHƯA RÕ",
+      "note": "Trên P&ID ghi chú 'SIZE HOLD' tại các nhánh cấp nước phun giảm ôn (P1LAE91 / P1LAF91)."
+    },
+    {
+      "sheet": "Exhaust Gas, Utility & CPH P&IDs",
+      "item": "Đường kính danh nghĩa một số ống phụ trợ (DNXX / DNXXX)",
+      "status": "CHƯA RÕ",
+      "note": "Một số ống xả/nước làm mát bơm ghi 'DNXX' hoặc 'DNXXX' và số lượng cảm biến nhiệt độ ổ trục bơm ghi 'NOTE 3 - tùy theo bản vẽ nhà cung cấp bơm'."
+    },
+    {
+      "sheet": "Heat Balance Diagram (85% & 50% Load)",
+      "item": "Nhiệt độ khói trung gian giữa từng module #1~#8 ở tải 85% và 50%",
+      "status": "CHƯA RÕ",
+      "note": "P&ID Exhaust Gas chỉ cung cấp đầy đủ profile nhiệt độ 8 module cho OP1 (Base Load). Profile 8 module cho 85% và 50% Load được nội suy bảo toàn cân bằng năng lượng từ T_in, T_stack và công suất trao đổi nhiệt từng cấp áp suất trên HBD."
+    }
+  ]
+}

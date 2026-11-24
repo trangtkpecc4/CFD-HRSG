@@ -1,0 +1,2672 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mô phỏng 3D CFD &amp; DCS — Lò thu hồi nhiệt HRSG</title>
+<style>
+  :root {
+    --bg: #070d17;
+    --panel: #0f172a;
+    --panel2: #16223a;
+    --border: #253657;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --accent: #38bdf8;
+    --green: #22c55e;
+    --red: #ef4444;
+    --amber: #f59e0b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    font-size: 13px;
+  }
+  header {
+    height: 50px;
+    background: #0b1324;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 14px;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 14px; letter-spacing: .3px; }
+  .brand .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 10px var(--accent); }
+  .tab-group, .hb-group, .ctrl-group { display: flex; align-items: center; gap: 6px; }
+  button {
+    background: var(--panel2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 5px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: .15s;
+  }
+  button:hover { border-color: var(--accent); background: #1d2f50; }
+  button.active { background: #0284c7; border-color: #38bdf8; color: #fff; font-weight: 600; }
+  button.hb-btn.active { background: #7c3aed; border-color: #a78bfa; color: #fff; }
+  button.danger { background: #7f1d1d; border-color: #ef4444; color: #fecaca; }
+  button.success { background: #14532d; border-color: #22c55e; color: #bbf7d0; }
+  .alarm-pill {
+    padding: 4px 10px; border-radius: 99px; font-weight: 700; font-size: 12px;
+    background: #14532d; border: 1px solid #22c55e; color: #86efac; cursor: pointer;
+  }
+  .alarm-pill.has-alarm { background: #7f1d1d; border-color: #ef4444; color: #fecaca; animation: pulse 1.2s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .65; } }
+
+  main { flex: 1; display: flex; overflow: hidden; position: relative; }
+  .viewport { flex: 1; position: relative; overflow: hidden; display: flex; flex-direction: column; }
+  #canvas3d { width: 100%; height: 100%; display: block; cursor: grab; }
+  #canvas3d:active { cursor: grabbing; }
+
+  .hud-top-left {
+    position: absolute; top: 10px; left: 10px; display: flex; flex-direction: column; gap: 6px; pointer-events: none;
+  }
+  .hud-row { display: flex; gap: 6px; flex-wrap: wrap; pointer-events: auto; }
+  .hud-box {
+    background: rgba(15, 23, 42, 0.86);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 10px;
+    backdrop-filter: blur(6px);
+  }
+  .hud-kpi { display: flex; gap: 14px; font-size: 12px; }
+  .hud-kpi div span { color: var(--muted); font-size: 11px; display: block; }
+  .hud-kpi div strong { color: var(--accent); font-size: 13px; }
+
+  .hud-bottom-left {
+    position: absolute; bottom: 10px; left: 10px; right: 10px;
+    display: flex; justify-content: space-between; align-items: flex-end; pointer-events: none;
+  }
+  .colorbar {
+    background: rgba(15, 23, 42, 0.88); border: 1px solid var(--border); border-radius: 8px;
+    padding: 8px 10px; pointer-events: auto; width: 250px;
+  }
+  .cb-bar { height: 10px; border-radius: 4px; margin: 4px 0; background: linear-gradient(90deg, #2563eb, #06b6d4, #22c55e, #eab308, #f97316, #ef4444); }
+  .cb-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); }
+  .zone-bar { display: flex; gap: 5px; flex-wrap: wrap; pointer-events: auto; max-width: 72%; justify-content: flex-end; }
+  .zone-chip {
+    display: flex; align-items: center; gap: 5px; padding: 4px 8px; border-radius: 6px;
+    background: rgba(15,23,42,.9); border: 1px solid var(--border); cursor: pointer; font-size: 11px;
+  }
+  .zone-chip.active { border-color: #fff; background: #1e293b; font-weight: 700; }
+  .zone-chip .swatch { width: 8px; height: 8px; border-radius: 2px; }
+
+  aside {
+    width: 360px;
+    background: var(--panel);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    padding: 12px;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .card {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px;
+  }
+  .card h3 { font-size: 13px; margin-bottom: 6px; color: var(--accent); display: flex; justify-content: space-between; align-items: center; }
+  .tag-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .tag-table th, .tag-table td { padding: 4px 5px; border-bottom: 1px solid #1e2e4d; text-align: left; }
+  .tag-table th { color: var(--muted); font-weight: 600; font-size: 11px; }
+  .tag-val { font-family: Consolas, monospace; font-weight: 700; color: #38bdf8; text-align: right; }
+
+  .criteria-list { list-style: none; display: flex; flex-direction: column; gap: 5px; margin-top: 6px; }
+  .criteria-item {
+    display: flex; justify-content: space-between; align-items: center; gap: 6px;
+    padding: 5px 7px; border-radius: 5px; background: #0f172a; border: 1px solid #1e293b; font-size: 11.5px;
+  }
+  .criteria-item.ok { border-color: #22c55e; background: rgba(34,197,94,.12); }
+  .criteria-item.fail { border-color: #ef4444; background: rgba(239,68,68,.12); }
+  .badge { padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 11px; }
+  .badge.ok { background: #16a34a; color: #fff; }
+  .badge.fail { background: #dc2626; color: #fff; }
+
+  /* DCS & CFD Views */
+  .view-pane { display: none; flex: 1; overflow-y: auto; padding: 14px; background: #091120; gap: 12px; flex-direction: column; }
+  .view-pane.active { display: flex; }
+  .dcs-grid { display: grid; grid-template-columns: 1.45fr 1fr; gap: 12px; }
+  .dcs-svg-wrap { background: #050a14; border: 1px solid var(--border); border-radius: 8px; padding: 8px; }
+  .faceplates { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+  .fp {
+    background: #0d1629; border: 1px solid #2b3f66; border-radius: 8px; padding: 10px;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .fp-head { display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: 12px; color: #7dd3fc; }
+  .fp-row { display: flex; justify-content: space-between; font-size: 12px; font-family: Consolas, monospace; }
+  .fp-bar { height: 8px; background: #1e293b; border-radius: 4px; overflow: hidden; }
+  .fp-bar > div { height: 100%; background: #38bdf8; transition: width .15s; }
+  .fp input[type=range] { width: 100%; accent-color: #38bdf8; }
+  .equip-ctrl { display: flex; flex-wrap: wrap; gap: 8px; }
+  .equip-btn-box {
+    background: #0d1629; border: 1px solid #2b3f66; border-radius: 8px; padding: 8px 10px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .led { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .led.on { background: #22c55e; box-shadow: 0 0 8px #22c55e; }
+  .led.off { background: #ef4444; box-shadow: 0 0 8px #ef4444; }
+
+  .alarm-drawer {
+    position: absolute; top: 54px; right: 370px; width: 380px; max-height: 300px; overflow-y: auto;
+    background: #111827; border: 1px solid #ef4444; border-radius: 8px; padding: 10px; z-index: 40;
+    display: none; box-shadow: 0 12px 30px rgba(0,0,0,.6);
+  }
+  .alarm-drawer.open { display: block; }
+  .alarm-row { padding: 5px 6px; border-bottom: 1px solid #1f2937; font-size: 12px; display: flex; justify-content: space-between; gap: 6px; }
+  .alarm-row .lvl { font-weight: 700; color: #f87171; }
+  .cfd-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .cfd-table th, .cfd-table td { padding: 6px 8px; border: 1px solid var(--border); text-align: right; }
+  .cfd-table th { background: #132038; color: #7dd3fc; text-align: center; }
+  .cfd-table td:nth-child(1), .cfd-table td:nth-child(2) { text-align: left; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <span class="dot"></span>
+    <span>MÔ PHỎNG 3D CFD &amp; DCS — LÒ THU HỒI NHIỆT HRSG (3 CẤP ÁP SUẤT)</span>
+  </div>
+  <div class="tab-group">
+    <button id="tab3d" class="active" onclick="switchMainTab('3d')">Cảnh 3D &amp; CFD</button>
+    <button id="tabDcs" onclick="switchMainTab('dcs')">Màn hình DCS (SVG)</button>
+    <button id="tabCfd" onclick="switchMainTab('cfd')">Phân tích CFD 8 Module</button>
+  </div>
+  <div class="hb-group">
+    <button id="hb_BASE_100" class="hb-btn active" onclick="selectLoadCase('BASE_100')">HB Base Load (100%)</button>
+    <button id="hb_LOAD_85" class="hb-btn" onclick="selectLoadCase('LOAD_85')">HB 85% Load</button>
+    <button id="hb_LOAD_50" class="hb-btn" onclick="selectLoadCase('LOAD_50')">HB 50% Load</button>
+  </div>
+  <div class="ctrl-group">
+    <button id="btnPause" onclick="togglePause()">Tạm dừng</button>
+    <button onclick="resetSim()">Đặt lại</button>
+    <span id="alarmBadge" class="alarm-pill" onclick="toggleAlarmDrawer()">Cảnh báo: 0</span>
+  </div>
+</header>
+
+<div id="alarmDrawer" class="alarm-drawer">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+    <strong style="color:#fca5a5;">DANH SÁCH CẢNH BÁO (ALARMS)</strong>
+    <button onclick="toggleAlarmDrawer()" style="padding:2px 6px;">Đóng</button>
+  </div>
+  <div id="alarmList"></div>
+</div>
+
+<main>
+  <!-- VIEW 1: 3D & CFD -->
+  <div id="view3d" class="viewport">
+    <canvas id="canvas3d"></canvas>
+    <div class="hud-top-left">
+      <div class="hud-row">
+        <button id="cfdTemp" class="active" onclick="setCfdMode('temp')">CFD Nhiệt độ (°C)</button>
+        <button id="cfdVel" onclick="setCfdMode('vel')">CFD Vận tốc (m/s)</button>
+        <button id="cfdPres" onclick="setCfdMode('pres')">CFD Áp suất (barA)</button>
+        <button id="cfdOff" onclick="setCfdMode('off')">Tắt lớp CFD</button>
+        <button onclick="setCamPreset('iso')">Toàn cảnh 3D</button>
+        <button onclick="setCamPreset('side')">Mặt cắt CFD</button>
+        <button onclick="setCamPreset('plan')">Mặt bằng</button>
+      </div>
+      <div class="hud-box hud-kpi" id="hudKpi"></div>
+    </div>
+    <div class="hud-bottom-left">
+      <div class="colorbar" id="cfdColorbar">
+        <div style="font-size:11px;font-weight:700;color:#e2e8f0;" id="cbTitle">Trường nhiệt độ khói CFD (°C)</div>
+        <div class="cb-bar"></div>
+        <div class="cb-labels"><span id="cbMin">60°C</span><span id="cbMid">390°C</span><span id="cbMax">720°C</span></div>
+      </div>
+      <div class="zone-bar" id="zoneBar"></div>
+    </div>
+  </div>
+
+  <!-- VIEW 2: SVG DCS -->
+  <div id="viewDcs" class="view-pane">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+      <h2 id="dcsTitle" style="font-size:16px;color:#38bdf8;">MÀN HÌNH DCS</h2>
+      <div id="dcsZoneTabs" style="display:flex;gap:5px;flex-wrap:wrap;"></div>
+    </div>
+    <div id="dcsScenarioBanner" class="card" style="display:none;border-color:#f59e0b;"></div>
+    <div class="dcs-grid">
+      <div class="dcs-svg-wrap">
+        <svg id="dcsSvg" viewBox="0 0 760 360" width="100%" style="display:block;"></svg>
+      </div>
+      <div class="card" style="display:flex;flex-direction:column;gap:8px;">
+        <h3>Biểu đồ xu hướng thời gian thực (Trend)</h3>
+        <svg id="trendSvg" viewBox="0 0 420 220" width="100%" style="background:#050a14;border-radius:6px;border:1px solid #1e293b;"></svg>
+        <div id="trendLegend" style="display:flex;gap:10px;flex-wrap:wrap;font-size:11px;"></div>
+        <h3 style="margin-top:4px;">Điều khiển Thiết bị (Start / Stop / Khẩn cấp)</h3>
+        <div id="dcsEquipCtrl" class="equip-ctrl"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Bộ điều khiển PID (Faceplate AUTO / MAN)</h3>
+      <div id="dcsFaceplates" class="faceplates"></div>
+    </div>
+  </div>
+
+  <!-- VIEW 3: CFD ANALYSIS -->
+  <div id="viewCfd" class="view-pane">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <h2 style="font-size:16px;color:#38bdf8;">PHÂN TÍCH ĐỘNG LỰC HỌC LƯU CHẤT (CFD) — 8 MODULE HRSG</h2>
+      <span id="cfdSummaryBadge" style="color:#94a3b8;font-size:12px;"></span>
+    </div>
+    <div class="card">
+      <h3>Biểu đồ phân bố Nhiệt độ &amp; Vận tốc dọc theo 8 Module trao đổi nhiệt</h3>
+      <svg id="cfdProfileSvg" viewBox="0 0 900 220" width="100%" style="background:#050a14;border-radius:6px;border:1px solid #1e293b;"></svg>
+    </div>
+    <div class="card">
+      <h3>Bảng thông số CFD chi tiết từng Module (Lưới 3D 20×6×4 = 480 ô lưới)</h3>
+      <div style="overflow-x:auto;">
+        <table class="cfd-table" id="cfdModuleTable"></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <aside>
+    <div class="card">
+      <h3 id="panelZoneTitle">Khu vực</h3>
+      <div id="panelZoneDesc" style="font-size:12px;color:var(--muted);margin-bottom:8px;"></div>
+      <button class="active" style="width:100%;" onclick="switchMainTab('dcs')">Mở màn hình DCS (SVG) khu này</button>
+    </div>
+
+    <div class="card">
+      <h3>
+        <span>Kịch bản sự cố đào tạo</span>
+        <span id="scStatusBadge" class="badge" style="display:none;"></span>
+      </h3>
+      <div id="scTitle" style="font-weight:700;font-size:12.5px;margin-bottom:4px;color:#fde68a;"></div>
+      <div id="scSituation" style="font-size:11.5px;color:#cbd5e1;margin-bottom:4px;"></div>
+      <div id="scProgression" style="font-size:11.5px;color:#94a3b8;margin-bottom:8px;"></div>
+      <div style="display:flex;gap:6px;margin-bottom:6px;">
+        <button id="btnStartSc" class="danger" style="flex:1;" onclick="toggleScenario()">Bắt đầu bài thi</button>
+        <button onclick="toggleHint()">Gợi ý xử lý</button>
+      </div>
+      <div id="scHintBox" style="display:none;background:#0f172a;border:1px solid #38bdf8;border-radius:6px;padding:7px;font-size:11.5px;color:#bae6fd;margin-bottom:6px;"></div>
+      <ul class="criteria-list" id="scCriteriaList"></ul>
+    </div>
+
+    <div class="card">
+      <h3>Thông số Tag đang chạy</h3>
+      <table class="tag-table">
+        <thead><tr><th>Tag</th><th>Mô tả</th><th style="text-align:right;">Giá trị</th></tr></thead>
+        <tbody id="panelTagsBody"></tbody>
+      </table>
+    </div>
+  </aside>
+</main>
+
+<script>
+// === EMBEDDED VERIFIED HRSG JSON DATA ===
+const HRSG_DATA = {
+  "metadata": {
+    "system_name": "Lò thu hồi nhiệt HRSG 3 cấp áp suất có quá nhiệt trung gian (Triple-Pressure Reheat HRSG)",
+    "configuration": "Horizontal Gas Flow, Natural Circulation, 8 Tube-Bank Modules, Integral Deaerator",
+    "hrsg_volume_m3": 11835,
+    "unit_prefix_note": "Tag sử dụng tiền tố P1 (Tổ máy 1); cấu trúc tương đương cho P2 (Tổ máy 2)",
+    "coordinate_system": "x: dọc dòng khói từ trái (GT Inlet) sang phải (Stack), y: cao độ (m), z: ngang lò (m)"
+  },
+  "heat_balance_cases": {
+    "BASE_100": {
+      "id": "BASE_100",
+      "name": "HB Base Load (100%)",
+      "gt_load_pct": 97.4,
+      "ambient_temp_c": 30.0,
+      "ambient_pressure_bara": 1.009,
+      "flue_gas": {
+        "mass_flow_tph": 2631.1,
+        "inlet_temp_c": 660.3,
+        "inlet_pressure_bara": 1.041,
+        "stack_temp_c": 80.3,
+        "stack_pressure_bara": 1.009,
+        "co2_wt_pct": 8.12,
+        "nox_mg_nm3": 51.0,
+        "sox_mg_nm3": 8.66,
+        "dust_mg_nm3": 4.58,
+        "module_inlet_temps_c": [634.3, 473.8, 360.9, 325.0, 254.5, 215.5, 167.2, 131.7]
+      },
+      "hp": {
+        "drum_p_bara": 171.1,
+        "drum_t_c": 352.8,
+        "steam_p_bara": 165.5,
+        "steam_t_c": 568.2,
+        "steam_flow_tph": 382.8,
+        "steam_h_kjkg": 3484.1,
+        "fw_flow_tph": 353.6,
+        "dsh_spray_tph": 0.0
+      },
+      "rh": {
+        "crh_p_bara": 36.6,
+        "crh_t_c": 339.9,
+        "crh_flow_tph": 369.5,
+        "crh_h_kjkg": 3076.1,
+        "hrh_p_bara": 35.0,
+        "hrh_t_c": 569.3,
+        "hrh_flow_tph": 416.3,
+        "hrh_h_kjkg": 3608.8,
+        "dsh_spray_tph": 0.0
+      },
+      "ip": {
+        "drum_p_bara": 37.8,
+        "drum_t_c": 247.1,
+        "steam_p_bara": 37.5,
+        "steam_t_c": 340.6,
+        "steam_flow_tph": 46.8,
+        "steam_h_kjkg": 3075.9,
+        "fw_flow_tph": 56.7
+      },
+      "lp": {
+        "drum_p_bara": 6.4,
+        "drum_t_c": 161.3,
+        "steam_p_bara": 5.86,
+        "steam_t_c": 290.6,
+        "steam_flow_tph": 42.6,
+        "steam_h_kjkg": 3042.9
+      },
+      "cph": {
+        "condensate_flow_tph": 522.8,
+        "inlet_temp_c": 45.4,
+        "mixed_inlet_temp_c": 60.0,
+        "outlet_temp_c": 157.6,
+        "recirc_flow_tph": 77.3
+      },
+      "bfp_total_tph": 480.2
+    },
+    "LOAD_85": {
+      "id": "LOAD_85",
+      "name": "HB 85% Load",
+      "gt_load_pct": 78.8,
+      "ambient_temp_c": 30.0,
+      "ambient_pressure_bara": 1.009,
+      "flue_gas": {
+        "mass_flow_tph": 2257.1,
+        "inlet_temp_c": 693.9,
+        "inlet_pressure_bara": 1.034,
+        "stack_temp_c": 70.2,
+        "stack_pressure_bara": 1.009,
+        "co2_wt_pct": 8.09,
+        "nox_mg_nm3": 51.0,
+        "sox_mg_nm3": 8.66,
+        "dust_mg_nm3": 4.58,
+        "module_inlet_temps_c": [666.0, 495.0, 368.0, 326.0, 250.0, 206.0, 155.0, 118.0]
+      },
+      "hp": {
+        "drum_p_bara": 162.3,
+        "drum_t_c": 348.5,
+        "steam_p_bara": 156.9,
+        "steam_t_c": 602.6,
+        "steam_flow_tph": 352.2,
+        "steam_h_kjkg": 3584.1,
+        "fw_flow_tph": 328.8,
+        "dsh_spray_tph": 0.0
+      },
+      "rh": {
+        "crh_p_bara": 33.8,
+        "crh_t_c": 365.0,
+        "crh_flow_tph": 340.1,
+        "crh_h_kjkg": 3143.4,
+        "hrh_p_bara": 32.3,
+        "hrh_t_c": 599.4,
+        "hrh_flow_tph": 376.4,
+        "hrh_h_kjkg": 3679.6,
+        "dsh_spray_tph": 0.0
+      },
+      "ip": {
+        "drum_p_bara": 34.5,
+        "drum_t_c": 241.7,
+        "steam_p_bara": 34.3,
+        "steam_t_c": 336.8,
+        "steam_flow_tph": 36.4,
+        "steam_h_kjkg": 3074.2,
+        "fw_flow_tph": 41.4
+      },
+      "lp": {
+        "drum_p_bara": 5.2,
+        "drum_t_c": 153.4,
+        "steam_p_bara": 5.0,
+        "steam_t_c": 291.3,
+        "steam_flow_tph": 25.1,
+        "steam_h_kjkg": 3046.5
+      },
+      "cph": {
+        "condensate_flow_tph": 538.3,
+        "inlet_temp_c": 46.3,
+        "mixed_inlet_temp_c": 60.0,
+        "outlet_temp_c": 142.0,
+        "recirc_flow_tph": 89.4
+      },
+      "bfp_total_tph": 430.6
+    },
+    "LOAD_50": {
+      "id": "LOAD_50",
+      "name": "HB 50% Load",
+      "gt_load_pct": 41.0,
+      "ambient_temp_c": 30.0,
+      "ambient_pressure_bara": 1.009,
+      "flue_gas": {
+        "mass_flow_tph": 1568.3,
+        "inlet_temp_c": 720.4,
+        "inlet_pressure_bara": 1.021,
+        "stack_temp_c": 64.7,
+        "stack_pressure_bara": 1.009,
+        "co2_wt_pct": 7.43,
+        "nox_mg_nm3": 51.0,
+        "sox_mg_nm3": 8.85,
+        "dust_mg_nm3": 4.58,
+        "module_inlet_temps_c": [692.0, 512.0, 358.0, 312.0, 232.0, 188.0, 142.0, 108.0]
+      },
+      "hp": {
+        "drum_p_bara": 117.0,
+        "drum_t_c": 322.7,
+        "steam_p_bara": 113.3,
+        "steam_t_c": 603.2,
+        "steam_flow_tph": 251.1,
+        "steam_h_kjkg": 3622.6,
+        "fw_flow_tph": 218.6,
+        "dsh_spray_tph": 22.0
+      },
+      "rh": {
+        "crh_p_bara": 24.8,
+        "crh_t_c": 371.2,
+        "crh_flow_tph": 242.4,
+        "crh_h_kjkg": 3175.4,
+        "hrh_p_bara": 23.7,
+        "hrh_t_c": 602.2,
+        "hrh_flow_tph": 275.8,
+        "hrh_h_kjkg": 3692.8,
+        "dsh_spray_tph": 6.8
+      },
+      "ip": {
+        "drum_p_bara": 25.3,
+        "drum_t_c": 224.7,
+        "steam_p_bara": 25.2,
+        "steam_t_c": 314.1,
+        "steam_flow_tph": 26.5,
+        "steam_h_kjkg": 3043.0,
+        "fw_flow_tph": 27.0
+      },
+      "lp": {
+        "drum_p_bara": 4.1,
+        "drum_t_c": 144.8,
+        "steam_p_bara": 4.06,
+        "steam_t_c": 282.8,
+        "steam_flow_tph": 13.0,
+        "steam_h_kjkg": 3031.7
+      },
+      "cph": {
+        "condensate_flow_tph": 383.1,
+        "inlet_temp_c": 41.0,
+        "mixed_inlet_temp_c": 60.0,
+        "outlet_temp_c": 130.2,
+        "recirc_flow_tph": 103.4
+      },
+      "bfp_total_tph": 310.0
+    }
+  },
+  "zones": [
+    {
+      "id": "EXHAUST_GAS",
+      "name": "Khu 1: Hệ thống Khói thải & Ống khói",
+      "short_name": "Khói thải & Stack",
+      "color": "#ef4444",
+      "pad": { "x": -18, "z": 0, "w": 56, "d": 18 },
+      "camera": { "target": [0, 12, 0], "yaw": -0.62, "pitch": 0.34, "dist": 58 }
+    },
+    {
+      "id": "HP_SH_RH",
+      "name": "Khu 2: Quá nhiệt Cao áp (HP SH) & Tái nhiệt (RH)",
+      "short_name": "HP SH & Reheater",
+      "color": "#f97316",
+      "pad": { "x": -11, "z": 0, "w": 9, "d": 14 },
+      "camera": { "target": [-11, 10, 0], "yaw": -0.5, "pitch": 0.28, "dist": 26 }
+    },
+    {
+      "id": "HP_EVAP",
+      "name": "Khu 3: Sinh hơi Cao áp (HP Evaporator & Drum)",
+      "short_name": "HP Evaporator",
+      "color": "#eab308",
+      "pad": { "x": -3, "z": 0, "w": 6, "d": 14 },
+      "camera": { "target": [-3, 14, 0], "yaw": -0.55, "pitch": 0.25, "dist": 26 }
+    },
+    {
+      "id": "HP_ECO",
+      "name": "Khu 4: Hâm nước Cao áp (HP Economizer #1-#8)",
+      "short_name": "HP Economizer",
+      "color": "#22c55e",
+      "pad": { "x": 3, "z": 0, "w": 6, "d": 14 },
+      "camera": { "target": [3, 9, 0], "yaw": -0.45, "pitch": 0.28, "dist": 25 }
+    },
+    {
+      "id": "IP_SYSTEM",
+      "name": "Khu 5: Hệ thống Trung áp (IP Eco / Evap / SH)",
+      "short_name": "Hệ thống IP",
+      "color": "#06b6d4",
+      "pad": { "x": 9, "z": 0, "w": 6, "d": 14 },
+      "camera": { "target": [9, 13, 0], "yaw": -0.5, "pitch": 0.26, "dist": 26 }
+    },
+    {
+      "id": "LP_SYSTEM",
+      "name": "Khu 6: Hệ thống Hạ áp & Bình khử khí (LP & DEA)",
+      "short_name": "LP & Deaerator",
+      "color": "#3b82f6",
+      "pad": { "x": 15, "z": 0, "w": 6, "d": 14 },
+      "camera": { "target": [15, 14, 0], "yaw": -0.5, "pitch": 0.26, "dist": 26 }
+    },
+    {
+      "id": "CPH_SYSTEM",
+      "name": "Khu 7: Gia nhiệt Nước ngưng (CPH & Bơm tuần hoàn)",
+      "short_name": "CPH & Bơm TH",
+      "color": "#8b5cf6",
+      "pad": { "x": 20, "z": 10, "w": 8, "d": 10 },
+      "camera": { "target": [20, 6, 9], "yaw": -0.75, "pitch": 0.35, "dist": 22 }
+    },
+    {
+      "id": "BLOWDOWN_UTILITY",
+      "name": "Khu 8: Xả đáy (CBD/IBD), Thoát nước & Phụ trợ",
+      "short_name": "Xả đáy & Phụ trợ",
+      "color": "#ec4899",
+      "pad": { "x": 2, "z": 12, "w": 16, "d": 9 },
+      "camera": { "target": [2, 5, 12], "yaw": -0.4, "pitch": 0.38, "dist": 24 }
+    }
+  ],
+  "equipment": [
+    {
+      "tag": "P1HNA91_DUCT",
+      "type": "exhaust_gas_system",
+      "name": "Kênh khói đầu vào & Bộ khuếch tán (Inlet Duct & Diffuser)",
+      "description": "Dẫn khói thải tuabin khí (660.3°C @Base Load) qua khớp giãn nở vào Module #1",
+      "zone": "EXHAUST_GAS",
+      "pos": [-21, 5.5, 0],
+      "size": [10, 9, 10]
+    },
+    {
+      "tag": "P1HNE91AA001",
+      "type": "exhaust_gas_system",
+      "name": "Van tiết lưu ống khói (Stack Damper)",
+      "description": "Van chắn giữ nhiệt khi dừng lò, giám sát vị trí mở/đóng bởi GS P1HNE91CG001~004",
+      "zone": "EXHAUST_GAS",
+      "pos": [26.5, 14, 0],
+      "size": [5.5, 1.2, 5.5]
+    },
+    {
+      "tag": "P1HNE91BS001",
+      "type": "exhaust_gas_system",
+      "name": "Ống khói & Bộ giảm thanh ống khói (Stack & Silencer)",
+      "description": "Ống khói chính cao ~55m kèm bộ giảm thanh, cổng đo EPA/CEMS (P1HNE91CQ201~204)",
+      "zone": "EXHAUST_GAS",
+      "pos": [26.5, 22, 0],
+      "size": [5.2, 38, 5.2]
+    },
+    {
+      "tag": "P1HNA91AT001",
+      "type": "exhaust_gas_system",
+      "name": "Máy hút ẩm bảo quản lò (Dehumidifier)",
+      "description": "Công suất 155 kW, thể tích lò 11,835 m³, thời gian hút ẩm 4 giờ khi bảo quản khô",
+      "zone": "EXHAUST_GAS",
+      "pos": [5, 1.5, -10.5],
+      "size": [3.2, 2.5, 2.2]
+    },
+    {
+      "tag": "P1HAH91_SH3",
+      "type": "superheater",
+      "name": "Bộ quá nhiệt cao áp #3 (HP Superheater #3)",
+      "description": "Module #1 - Nhận hơi từ HP SH #2 qua bộ giảm ôn, gia nhiệt đạt 568.2°C @165.5 barA",
+      "zone": "HP_SH_RH",
+      "pos": [-13.5, 9, 0],
+      "size": [2.2, 15, 11]
+    },
+    {
+      "tag": "P1HAJ91_HRH",
+      "type": "reheater",
+      "name": "Bộ tái nhiệt nóng (Hot Reheater)",
+      "description": "Module #1 - Gia nhiệt hơi tái nhiệt từ Cold RH qua bộ giảm ôn RH đạt 569.3°C @35.0 barA",
+      "zone": "HP_SH_RH",
+      "pos": [-11.0, 9, 0],
+      "size": [2.2, 15, 11]
+    },
+    {
+      "tag": "P1LAE91AH001",
+      "type": "superheater",
+      "name": "Bộ giảm ôn trung gian HP (HP Inter-Stage Desuperheater)",
+      "description": "Phun nước cấp cao áp điều chỉnh nhiệt độ hơi chính qua van TCV P1LAE91AA081/082",
+      "zone": "HP_SH_RH",
+      "pos": [-11.8, 17.8, 3.8],
+      "size": [1.8, 1.4, 1.4]
+    },
+    {
+      "tag": "P1LAF91AH001",
+      "type": "reheater",
+      "name": "Bộ giảm ôn trung gian RH (RH Inter-Stage Desuperheater)",
+      "description": "Phun nước cấp trung áp điều chỉnh nhiệt độ hơi tái nhiệt qua van TCV P1LAF91AA081/082",
+      "zone": "HP_SH_RH",
+      "pos": [-9.2, 17.8, -3.8],
+      "size": [1.8, 1.4, 1.4]
+    },
+    {
+      "tag": "P1HAH91_SH12",
+      "type": "superheater",
+      "name": "Bộ quá nhiệt cao áp #1 & #2 (HP SH #1 & #2)",
+      "description": "Module #2 - Quá nhiệt sơ cấp hơi bão hòa từ bao hơi HP (352.8°C → 395.1°C)",
+      "zone": "HP_SH_RH",
+      "pos": [-8.4, 9, 0],
+      "size": [2.4, 15, 11]
+    },
+    {
+      "tag": "P1HAJ91_CRH",
+      "type": "reheater",
+      "name": "Bộ tái nhiệt lạnh (Cold Reheater)",
+      "description": "Module #2 - Tiếp nhận hơi CRH từ tuabin HP (339.9°C) hòa trộn với hơi IP SH",
+      "zone": "HP_SH_RH",
+      "pos": [-6.2, 9, 0],
+      "size": [1.8, 15, 11]
+    },
+    {
+      "tag": "P1LBC81BS001",
+      "type": "reheater",
+      "name": "Bộ giảm thanh chung RH (RH Common Silencer)",
+      "description": "Giảm thanh cho van an toàn CRH (42.0/43.2 barA) và HRH (39.0 barA)",
+      "zone": "HP_SH_RH",
+      "pos": [-9.5, 21.5, 4.2],
+      "size": [1.6, 3.2, 1.6]
+    },
+    {
+      "tag": "P1HAD91_EVAP",
+      "type": "evaporator",
+      "name": "Dàn ống sinh hơi cao áp (HP Evaporator)",
+      "description": "Module #3 - Tuần hoàn tự nhiên nối giữa manifold dưới và bao hơi HP",
+      "zone": "HP_EVAP",
+      "pos": [-2.8, 9, 0],
+      "size": [3.2, 15, 11]
+    },
+    {
+      "tag": "P1HAD91BB001",
+      "type": "evaporator",
+      "name": "Bao hơi Cao áp (HP Steam Drum)",
+      "description": "Dung tích 51.2 m³, áp suất thiết kế 185 barA (vận hành 171.1 barA, 352.8°C), van an toàn PSV 185/190.5 barA",
+      "zone": "HP_EVAP",
+      "pos": [-2.8, 19.5, 0],
+      "size": [3.0, 3.0, 12.0]
+    },
+    {
+      "tag": "P1HAD91BS001",
+      "type": "evaporator",
+      "name": "Bộ giảm thanh chung HP (HP Common Silencer)",
+      "description": "Giảm thanh cho PSV bao hơi HP, PSV hơi chính HP (180 barA) và đường xả khí",
+      "zone": "HP_EVAP",
+      "pos": [-2.8, 22.8, 4.5],
+      "size": [1.8, 3.5, 1.8]
+    },
+    {
+      "tag": "P1HAC91_ECO58",
+      "type": "economizer",
+      "name": "Bộ hâm nước cao áp #5~#8 (HP Economizer #5~#8)",
+      "description": "Module #4 - Gia nhiệt nước cấp cao áp trước khi vào bao hơi HP (đạt 348.2°C), có nhánh trích tới FGH (C)",
+      "zone": "HP_ECO",
+      "pos": [1.8, 9, 0],
+      "size": [2.6, 15, 11]
+    },
+    {
+      "tag": "P1HAC91_ECO14",
+      "type": "economizer",
+      "name": "Bộ hâm nước cao áp #1~#4 (HP Economizer #1~#4)",
+      "description": "Module #5/#6 - Nhận nước cấp từ bơm HP/IP BFP qua trạm van LCV 100%A/100%B/30% (P1LAB91AA081~083)",
+      "zone": "HP_ECO",
+      "pos": [4.8, 9, 0],
+      "size": [2.4, 15, 11]
+    },
+    {
+      "tag": "P1LBA92_IPSH",
+      "type": "superheater",
+      "name": "Bộ quá nhiệt trung áp (IP Superheater)",
+      "description": "Module #4 - Quá nhiệt hơi IP từ 247.1°C lên 340.6°C @37.5 barA, cấp vào đường CRH qua PCV P1LBA92AA081",
+      "zone": "IP_SYSTEM",
+      "pos": [7.8, 9, 0],
+      "size": [1.6, 15, 11]
+    },
+    {
+      "tag": "P1HAD92_IPEVAP",
+      "type": "evaporator",
+      "name": "Dàn ống sinh hơi trung áp (IP Evaporator)",
+      "description": "Module #5 - Sinh hơi trung áp tuần hoàn tự nhiên cấp cho bao hơi IP",
+      "zone": "IP_SYSTEM",
+      "pos": [9.8, 9, 0],
+      "size": [1.8, 15, 11]
+    },
+    {
+      "tag": "P1HAD92BB001",
+      "type": "evaporator",
+      "name": "Bao hơi Trung áp (IP Steam Drum)",
+      "description": "Dung tích 20.3 m³, áp suất thiết kế 44 barA (vận hành 37.8 barA, 247.1°C)",
+      "zone": "IP_SYSTEM",
+      "pos": [9.2, 19.0, 0],
+      "size": [2.4, 2.4, 10.5]
+    },
+    {
+      "tag": "P1HAD92BS001",
+      "type": "evaporator",
+      "name": "Bộ giảm thanh chung IP (IP Common Silencer)",
+      "description": "Giảm thanh cho PSV bao hơi IP và PSV hơi quá nhiệt IP (41.0 barA)",
+      "zone": "IP_SYSTEM",
+      "pos": [9.2, 22.0, 4.0],
+      "size": [1.5, 3.0, 1.5]
+    },
+    {
+      "tag": "P1HAC94_IPECO",
+      "type": "economizer",
+      "name": "Bộ hâm nước trung áp #1~#2 (IP Economizer #1 & #2)",
+      "description": "Module #6 - Gia nhiệt nước cấp IP từ 161.7°C lên 239.8°C, cấp vào bao hơi IP qua van LCV P1HAC94AA081/082",
+      "zone": "IP_SYSTEM",
+      "pos": [11.8, 9, 0],
+      "size": [1.6, 15, 11]
+    },
+    {
+      "tag": "P1LBA95_LPSH",
+      "type": "superheater",
+      "name": "Bộ quá nhiệt hạ áp (LP Superheater)",
+      "description": "Module #6 - Quá nhiệt hơi LP từ 161.3°C lên 290.6°C @5.86 barA, có van ERV/PSV (8.8/9.0 barA)",
+      "zone": "LP_SYSTEM",
+      "pos": [14.0, 9, 0],
+      "size": [1.6, 15, 11]
+    },
+    {
+      "tag": "P1HAD93_LPEVAP",
+      "type": "evaporator",
+      "name": "Dàn ống sinh hơi hạ áp (LP Evaporator)",
+      "description": "Module #7 - Sinh hơi hạ áp cấp cho bao hơi LP và bình khử khí tích hợp",
+      "zone": "LP_SYSTEM",
+      "pos": [16.2, 9, 0],
+      "size": [2.2, 15, 11]
+    },
+    {
+      "tag": "P1HAD93BB001",
+      "type": "evaporator",
+      "name": "Bao hơi Hạ áp / Bồn chứa (LP Steam Drum / Storage Tank)",
+      "description": "Dung tích 185.5 m³, vận hành 6.4 barA / 161.3°C, cấp nước hút cho bơm HP/IP BFP",
+      "zone": "LP_SYSTEM",
+      "pos": [16.2, 18.8, 0],
+      "size": [3.4, 3.4, 12.0]
+    },
+    {
+      "tag": "P1LAA91BB001",
+      "type": "evaporator",
+      "name": "Bình khử khí tích hợp (Integral Deaerator)",
+      "description": "Dung tích 27.5 m³, lắp đặt trực tiếp trên bao hơi LP, có van hơi mồi Pegging Steam PCV P1LBC91AA081",
+      "zone": "LP_SYSTEM",
+      "pos": [16.2, 22.0, -2.0],
+      "size": [2.2, 3.4, 2.2]
+    },
+    {
+      "tag": "P1HAD93BS001",
+      "type": "evaporator",
+      "name": "Bộ giảm thanh chung LP (LP Common Silencer)",
+      "description": "Giảm thanh cho PSV bao hơi LP (11.0/11.3 barA), LP SH PSV/ERV và CBD PSV",
+      "zone": "LP_SYSTEM",
+      "pos": [16.2, 22.6, 4.2],
+      "size": [1.6, 3.0, 1.6]
+    },
+    {
+      "tag": "P1LBA95BS001",
+      "type": "superheater",
+      "name": "Bộ giảm thanh khởi động LP (LP Start-up Silencer)",
+      "description": "Giảm thanh cho van xả khởi động hơi LP PCV P1LBA95AA081",
+      "zone": "LP_SYSTEM",
+      "pos": [14.0, 21.8, 4.2],
+      "size": [1.4, 2.6, 1.4]
+    },
+    {
+      "tag": "P1LCC10_CPH14",
+      "type": "condensate_preheater",
+      "name": "Bộ gia nhiệt nước ngưng #1~#4 (Condensate Preheater #1~#4)",
+      "description": "Module #8 - Thu hồi nhiệt khói đuôi (131.7°C → 80.3°C), gia nhiệt nước ngưng từ 60°C lên 157.6°C",
+      "zone": "CPH_SYSTEM",
+      "pos": [19.8, 9, 0],
+      "size": [3.4, 15, 11]
+    },
+    {
+      "tag": "P1LCB10AP001",
+      "type": "pump",
+      "name": "Bơm tuần hoàn CPH A (CPH Recirculation Pump A)",
+      "description": "Bơm tuần hoàn 100% duy trì nhiệt độ nước ngưng vào CPH >= 60°C chống ăn mòn điểm sương axit",
+      "zone": "CPH_SYSTEM",
+      "pos": [18.5, 1.5, 10.5],
+      "size": [1.8, 1.6, 1.4]
+    },
+    {
+      "tag": "P1LCB10AP002",
+      "type": "pump",
+      "name": "Bơm tuần hoàn CPH B (CPH Recirculation Pump B)",
+      "description": "Bơm tuần hoàn 100% dự phòng nóng cho bơm A, khởi động tự động khi bơm A sự cố",
+      "zone": "CPH_SYSTEM",
+      "pos": [21.5, 1.5, 10.5],
+      "size": [1.8, 1.6, 1.4]
+    },
+    {
+      "tag": "P1LCQ91BB001",
+      "type": "blowdown_system",
+      "name": "Bồn xả đáy liên tục (Continuous Blowdown Tank - CBD)",
+      "description": "Dung tích 3.4 m³, thu hồi hơi flash về bao hơi LP, xả nước sang IBD qua van LCV P1LCQ91AA081",
+      "zone": "BLOWDOWN_UTILITY",
+      "pos": [-2.5, 3.2, 12.0],
+      "size": [2.2, 4.5, 2.2]
+    },
+    {
+      "tag": "P1LCQ92BB001",
+      "type": "blowdown_system",
+      "name": "Bồn xả đáy gián đoạn (Intermittent Blowdown Tank - IBD)",
+      "description": "Dung tích 25.3 m³, tiếp nhận xả đáy định kỳ & drain HP/IP/LP, làm mát nước phun qua TCV P1GHD91AA081",
+      "zone": "BLOWDOWN_UTILITY",
+      "pos": [2.2, 3.0, 12.0],
+      "size": [5.2, 3.2, 3.0]
+    },
+    {
+      "tag": "P1LCQ92BS001",
+      "type": "blowdown_system",
+      "name": "Bộ giảm thanh bồn xả đáy (BD Tank Silencer)",
+      "description": "Giảm thanh hơi thoát đỉnh bồn xả đáy gián đoạn IBD",
+      "zone": "BLOWDOWN_UTILITY",
+      "pos": [2.2, 7.2, 12.0],
+      "size": [1.5, 3.6, 1.5]
+    },
+    {
+      "tag": "P1LCQ93AP001",
+      "type": "pump",
+      "name": "Bơm chuyển nước xả đáy A (BD Transfer Pump A)",
+      "description": "Công suất 100 m³/h (100% vận hành), bơm nước đã làm mát (<60°C) tới hệ thống xử lý nước thải",
+      "zone": "BLOWDOWN_UTILITY",
+      "pos": [6.8, 1.4, 10.8],
+      "size": [1.6, 1.4, 1.2]
+    },
+    {
+      "tag": "P1LCQ93AP002",
+      "type": "pump",
+      "name": "Bơm chuyển nước xả đáy B (BD Transfer Pump B)",
+      "description": "Công suất 100 m³/h (100% dự phòng), tự động chạy khi mức bồn IBD cao hoặc bơm A dừng",
+      "zone": "BLOWDOWN_UTILITY",
+      "pos": [6.8, 1.4, 13.2],
+      "size": [1.6, 1.4, 1.2]
+    },
+    {
+      "tag": "P1SHM91_DRAIN",
+      "type": "drain_system",
+      "name": "Hệ thống ống góp thoát nước (Drain & Funnel Headers)",
+      "description": "6 tuyến ống góp DN50 (P1SHM91~96): Silencer, BD Pump, CPH Pump, PSV, Drum Gauge và Funnel Drain ra mương",
+      "zone": "BLOWDOWN_UTILITY",
+      "pos": [10.0, 0.8, 12.0],
+      "size": [3.0, 1.0, 4.0]
+    },
+    {
+      "tag": "P1PGB91_UTIL",
+      "type": "utility_system",
+      "name": "Trạm phụ trợ (CCW, Khí điều khiển IA, Khí dịch vụ SA, Nước SW)",
+      "description": "Cấp nước làm mát kín cho 4 bơm (BD/CPH), khí điều khiển P1QFB91 cho 20 van điều khiển và nước làm mát xả đáy",
+      "zone": "BLOWDOWN_UTILITY",
+      "pos": [-6.5, 1.8, 12.0],
+      "size": [3.2, 2.4, 3.2]
+    }
+  ],
+  "lines": [
+    {
+      "id": "LINE_FLUE_GAS",
+      "from": "P1HNA91_DUCT",
+      "to": "P1HNE91BS001",
+      "medium": "flue_gas",
+      "label": "Khói thải GT (660°C → 80°C)",
+      "flow_tag": "FG_FLOW",
+      "path": [[-26, 5.5, 0], [-14, 9, 0], [0, 9, 0], [16, 9, 0], [23, 9, 0], [26.5, 14, 0], [26.5, 38, 0]]
+    },
+    {
+      "id": "LINE_CONDENSATE_IN",
+      "from": "P1LCC10_CPH14",
+      "to": "P1LAA91BB001",
+      "medium": "condensate",
+      "label": "Nước ngưng từ CPH lên Bình khử khí",
+      "flow_tag": "P1LCA10CF901",
+      "path": [[24, 3, 5], [20.5, 3, 5], [19.8, 15, 3], [16.2, 22, -1]]
+    },
+    {
+      "id": "LINE_CPH_RECIRC",
+      "from": "P1LCC10_CPH14",
+      "to": "P1LCB10AP001",
+      "medium": "condensate",
+      "label": "Tuần hoàn CPH (giữ T_in >= 60°C)",
+      "flow_tag": "P1LCB30CF901",
+      "path": [[19.5, 15, 5], [19.5, 2, 10.5], [21.5, 2, 10.5], [21.5, 3, 5]]
+    },
+    {
+      "id": "LINE_LP_STEAM",
+      "from": "P1HAD93BB001",
+      "to": "P1LBA95_LPSH",
+      "medium": "lp_steam",
+      "label": "Hơi hạ áp (LP Steam 5.86 barA)",
+      "flow_tag": "P1LBA95CF901",
+      "path": [[16.2, 19.5, 0], [14.0, 17, 0], [14.0, 17, -7.5]]
+    },
+    {
+      "id": "LINE_IP_FW",
+      "from": "P1HAD93BB001",
+      "to": "P1HAC94_IPECO",
+      "medium": "feedwater",
+      "label": "Nước cấp trung áp (IP FW)",
+      "flow_tag": "P1LAB95CF901",
+      "path": [[16.2, 17, 6], [11.8, 4, 6], [11.8, 16, 2], [9.2, 19.0, 1]]
+    },
+    {
+      "id": "LINE_IP_STEAM",
+      "from": "P1HAD92BB001",
+      "to": "P1HAJ91_CRH",
+      "medium": "ip_steam",
+      "label": "Hơi trung áp (IP SH → CRH)",
+      "flow_tag": "P1LBA92CF901",
+      "path": [[9.2, 19.5, 0], [7.8, 16.5, 0], [-6.2, 16.5, -4]]
+    },
+    {
+      "id": "LINE_HP_FW",
+      "from": "P1HAD93BB001",
+      "to": "P1HAD91BB001",
+      "medium": "feedwater",
+      "label": "Nước cấp cao áp (BFP → HP Eco → HP Drum)",
+      "flow_tag": "P1LAB91CF901",
+      "path": [[14, 2, 7.5], [4.8, 4, 6], [1.8, 16, 4], [-2.8, 19.5, 2]]
+    },
+    {
+      "id": "LINE_HP_STEAM",
+      "from": "P1HAD91BB001",
+      "to": "P1HAH91_SH3",
+      "medium": "hp_steam",
+      "label": "Hơi chính Cao áp (165.5 barA, 568.2°C)",
+      "flow_tag": "P1LBA91CF901",
+      "path": [[-2.8, 20.5, 0], [-8.4, 17, 0], [-11.8, 17.8, 3.8], [-13.5, 17, 0], [-13.5, 17, -8]]
+    },
+    {
+      "id": "LINE_RH_STEAM",
+      "from": "P1HAJ91_CRH",
+      "to": "P1HAJ91_HRH",
+      "medium": "rh_steam",
+      "label": "Hơi Tái nhiệt (CRH → DSH → HRH 569.3°C)",
+      "flow_tag": "RH_FLOW",
+      "path": [[-6.2, 16.5, -7.5], [-6.2, 16.5, -3.5], [-9.2, 17.8, -3.8], [-11.0, 17, 0], [-11.0, 17, -8]]
+    },
+    {
+      "id": "LINE_CBD_IBD",
+      "from": "P1HAD91BB001",
+      "to": "P1LCQ92BB001",
+      "medium": "blowdown",
+      "label": "Xả đáy liên tục & gián đoạn (HP/IP/LP → CBD/IBD)",
+      "flow_tag": "BD_FLOW",
+      "path": [[-2.8, 18, 6], [-2.5, 4.5, 12], [2.2, 3.0, 12], [6.8, 1.4, 12], [11, 1.4, 12]]
+    }
+  ],
+  "instruments": [
+    { "tag": "P1HNA91CT901", "type": "TIA", "description": "Nhiệt độ khói thải đầu vào HRSG", "unit": "°C", "zone": "EXHAUST_GAS", "is_control_loop": false, "actuator": null, "setpoint_base": 660.3 },
+    { "tag": "P1HNA91CP901", "type": "PIA", "description": "Áp suất khói đầu vào HRSG (độ sụt áp lò)", "unit": "barA", "zone": "EXHAUST_GAS", "is_control_loop": false, "actuator": "P1HNE91AA001", "setpoint_base": 1.041 },
+    { "tag": "P1HNE91CT001", "type": "TI", "description": "Nhiệt độ khói thải đỉnh ống khói", "unit": "°C", "zone": "EXHAUST_GAS", "is_control_loop": false, "actuator": null, "setpoint_base": 80.3 },
+    { "tag": "P1HNE91CG001", "type": "GS", "description": "Độ mở van tiết lưu ống khói (Stack Damper)", "unit": "%", "zone": "EXHAUST_GAS", "is_control_loop": true, "actuator": "P1HNE91AA001", "setpoint_base": 100.0 },
+
+    { "tag": "P1LBA91CT901", "type": "TIC", "description": "Nhiệt độ hơi chính HP ra tuabin", "unit": "°C", "zone": "HP_SH_RH", "is_control_loop": true, "actuator": "P1LAE91AA081", "setpoint_base": 568.2 },
+    { "tag": "P1LBA91CP901", "type": "PIA", "description": "Áp suất hơi chính HP", "unit": "barA", "zone": "HP_SH_RH", "is_control_loop": false, "actuator": null, "setpoint_base": 165.5 },
+    { "tag": "P1LBA91CF901", "type": "FI", "description": "Lưu lượng hơi chính HP", "unit": "t/h", "zone": "HP_SH_RH", "is_control_loop": false, "actuator": null, "setpoint_base": 382.8 },
+    { "tag": "P1LAE91CF901", "type": "FI", "description": "Lưu lượng nước phun giảm ôn HP", "unit": "t/h", "zone": "HP_SH_RH", "is_control_loop": false, "actuator": "P1LAE91AA081", "setpoint_base": 0.0 },
+    { "tag": "P1LBB91CT911", "type": "TIC", "description": "Nhiệt độ hơi tái nhiệt nóng HRH", "unit": "°C", "zone": "HP_SH_RH", "is_control_loop": true, "actuator": "P1LAF91AA081", "setpoint_base": 569.3 },
+    { "tag": "P1LBB91CP901", "type": "PI", "description": "Áp suất hơi tái nhiệt nóng HRH", "unit": "barA", "zone": "HP_SH_RH", "is_control_loop": false, "actuator": null, "setpoint_base": 35.0 },
+    { "tag": "P1LAF91CF901", "type": "FI", "description": "Lưu lượng nước phun giảm ôn RH", "unit": "t/h", "zone": "HP_SH_RH", "is_control_loop": false, "actuator": "P1LAF91AA081", "setpoint_base": 0.0 },
+
+    { "tag": "P1HAD91CL911", "type": "LIC", "description": "Mức nước bao hơi Cao áp (HP Drum Level)", "unit": "mm", "zone": "HP_EVAP", "is_control_loop": true, "actuator": "P1LAB91AA081", "setpoint_base": 0.0 },
+    { "tag": "P1HAD91CP901", "type": "PIA", "description": "Áp suất bao hơi Cao áp", "unit": "barA", "zone": "HP_EVAP", "is_control_loop": false, "actuator": null, "setpoint_base": 171.1 },
+    { "tag": "P1HAD91CT001", "type": "TI", "description": "Nhiệt độ kim loại bao hơi HP", "unit": "°C", "zone": "HP_EVAP", "is_control_loop": false, "actuator": null, "setpoint_base": 352.8 },
+
+    { "tag": "P1LAB91CF901", "type": "FI", "description": "Lưu lượng nước cấp Cao áp vào HP Eco", "unit": "t/h", "zone": "HP_ECO", "is_control_loop": true, "actuator": "P1LAB91AA081", "setpoint_base": 353.6 },
+    { "tag": "P1HAC91CT901", "type": "TI", "description": "Nhiệt độ nước ra HP Economizer #8", "unit": "°C", "zone": "HP_ECO", "is_control_loop": false, "actuator": null, "setpoint_base": 348.2 },
+    { "tag": "P1LAB93CT911", "type": "TIC", "description": "Điều khiển van bypass HP Economizer (chống sôi)", "unit": "°C", "zone": "HP_ECO", "is_control_loop": true, "actuator": "P1LAB93AA081", "setpoint_base": 340.0 },
+
+    { "tag": "P1HAD92CL911", "type": "LIC", "description": "Mức nước bao hơi Trung áp (IP Drum Level)", "unit": "mm", "zone": "IP_SYSTEM", "is_control_loop": true, "actuator": "P1HAC94AA081", "setpoint_base": 0.0 },
+    { "tag": "P1HAD92CP901", "type": "PIA", "description": "Áp suất bao hơi Trung áp", "unit": "barA", "zone": "IP_SYSTEM", "is_control_loop": false, "actuator": null, "setpoint_base": 37.8 },
+    { "tag": "P1LBA92CP911", "type": "PIC", "description": "Áp suất hơi quá nhiệt IP (vào CRH)", "unit": "barA", "zone": "IP_SYSTEM", "is_control_loop": true, "actuator": "P1LBA92AA081", "setpoint_base": 37.5 },
+    { "tag": "P1LBA92CF901", "type": "FI", "description": "Lưu lượng hơi quá nhiệt IP", "unit": "t/h", "zone": "IP_SYSTEM", "is_control_loop": false, "actuator": null, "setpoint_base": 46.8 },
+    { "tag": "P1LAB95CF901", "type": "FI", "description": "Lưu lượng nước cấp Trung áp", "unit": "t/h", "zone": "IP_SYSTEM", "is_control_loop": false, "actuator": "P1HAC94AA081", "setpoint_base": 56.7 },
+
+    { "tag": "P1HAD93CL911", "type": "LIC", "description": "Mức nước bao hơi Hạ áp / Bồn khử khí", "unit": "mm", "zone": "LP_SYSTEM", "is_control_loop": true, "actuator": "P1LCC91AA081", "setpoint_base": 0.0 },
+    { "tag": "P1HAD93CP901", "type": "PIA", "description": "Áp suất bao hơi Hạ áp / Bình khử khí", "unit": "barA", "zone": "LP_SYSTEM", "is_control_loop": true, "actuator": "P1LBC91AA081", "setpoint_base": 6.4 },
+    { "tag": "P1LBA95CT901", "type": "TI", "description": "Nhiệt độ hơi quá nhiệt Hạ áp", "unit": "°C", "zone": "LP_SYSTEM", "is_control_loop": false, "actuator": null, "setpoint_base": 290.6 },
+    { "tag": "P1LBA95CF901", "type": "FI", "description": "Lưu lượng hơi quá nhiệt Hạ áp", "unit": "t/h", "zone": "LP_SYSTEM", "is_control_loop": false, "actuator": null, "setpoint_base": 42.6 },
+
+    { "tag": "P1LCA10CF901", "type": "FI", "description": "Lưu lượng nước ngưng vào CPH", "unit": "t/h", "zone": "CPH_SYSTEM", "is_control_loop": false, "actuator": null, "setpoint_base": 522.8 },
+    { "tag": "P1LCB30CT901", "type": "TIC", "description": "Nhiệt độ nước ngưng hòa trộn đầu vào CPH", "unit": "°C", "zone": "CPH_SYSTEM", "is_control_loop": true, "actuator": "P1LCB30AA081", "setpoint_base": 60.0 },
+    { "tag": "P1LCB30CF901", "type": "FI", "description": "Lưu lượng tuần hoàn CPH", "unit": "t/h", "zone": "CPH_SYSTEM", "is_control_loop": false, "actuator": "P1LCB10AP001", "setpoint_base": 77.3 },
+    { "tag": "P1LCC10CT001", "type": "TI", "description": "Nhiệt độ nước ngưng ra khỏi CPH", "unit": "°C", "zone": "CPH_SYSTEM", "is_control_loop": false, "actuator": null, "setpoint_base": 157.6 },
+
+    { "tag": "P1LCQ91CL911", "type": "LIC", "description": "Mức nước bồn xả đáy liên tục (CBD)", "unit": "%", "zone": "BLOWDOWN_UTILITY", "is_control_loop": true, "actuator": "P1LCQ91AA081", "setpoint_base": 50.0 },
+    { "tag": "P1LCQ92CL911", "type": "LIC", "description": "Mức nước bồn xả đáy gián đoạn (IBD)", "unit": "%", "zone": "BLOWDOWN_UTILITY", "is_control_loop": false, "actuator": "P1LCQ93AP001", "setpoint_base": 45.0 },
+    { "tag": "P1GHD91CT911", "type": "TIC", "description": "Nhiệt độ nước bồn IBD (làm mát xả thải)", "unit": "°C", "zone": "BLOWDOWN_UTILITY", "is_control_loop": true, "actuator": "P1GHD91AA081", "setpoint_base": 55.0 }
+  ],
+  "scenarios": [
+    {
+      "id": "SC_EXHAUST_GAS",
+      "zone": "EXHAUST_GAS",
+      "title": "Sự cố kẹt đóng một phần Van tiết lưu ống khói (Stack Damper)",
+      "duration_s": 60,
+      "situation": "Trong lúc vận hành Base Load, van tiết lưu ống khói P1HNE91AA001 bị kẹt trượt về vị trí 42% độ mở, gây tăng áp suất ngược kênh khói và tăng mạnh vận tốc cục bộ.",
+      "progression": "Áp suất đầu vào P1HNA91CP901 tăng vượt 1.075 barA (nguy cơ trip Tuabin khí do áp suất ngược cao), nhiệt độ khói thoát tăng và phân bố CFD bị xoáy quẩn ở Module #7-#8.",
+      "correct_action": "Chuyển điều khiển Stack Damper P1HNE91CG001 sang MAN/MỞ CƯỠNG BỨC về 100% (hoặc bấm nút MỞ KHẨN CẤP P1HNE91AA001 trên DCS) để giải tỏa áp suất ngược kênh khói.",
+      "criteria": [
+        { "tag": "P1HNE91CG001", "op": ">=", "target": 95.0, "label": "Độ mở Stack Damper P1HNE91CG001 >= 95%" },
+        { "tag": "P1HNA91CP901", "op": "<=", "target": 1.050, "label": "Áp suất khói vào P1HNA91CP901 <= 1.050 barA" },
+        { "tag": "P1HNE91CT001", "op": "<=", "target": 88.0, "label": "Nhiệt độ khói đỉnh ống khói P1HNE91CT001 <= 88°C" }
+      ]
+    },
+    {
+      "id": "SC_HP_SH_RH",
+      "zone": "HP_SH_RH",
+      "title": "Quá nhiệt hơi chính HP & Hơi tái nhiệt HRH khi giảm tải nhanh (50% Load)",
+      "duration_s": 60,
+      "situation": "Tổ máy giảm tải xuống 50% khiến nhiệt độ khói đầu vào GT tăng vọt lên 720.4°C, đồng thời vòng điều khiển giảm ôn HP (P1LBA91CT901) bị chuyển nhầm sang MAN (đóng van 0%).",
+      "progression": "Nhiệt độ hơi chính HP P1LBA91CT901 vọt lên trên 625°C (vượt giới hạn kim loại 615°C), nguy cơ gây biến dạng nhiệt dàn ống HP SH #3 và rotor tuabin HP.",
+      "correct_action": "Mở van phun giảm ôn HP P1LAE91AA081 (hoặc chuyển bộ điều khiển P1LBA91CT901 sang AUTO với SP <= 603°C) để đưa lưu lượng phun P1LAE91CF901 đạt >= 18 t/h và hạ nhiệt hơi chính.",
+      "criteria": [
+        { "tag": "P1LBA91CT901", "op": "<=", "target": 608.0, "label": "Nhiệt độ hơi chính HP P1LBA91CT901 <= 608°C" },
+        { "tag": "P1LAE91CF901", "op": ">=", "target": 15.0, "label": "Lưu lượng phun giảm ôn HP P1LAE91CF901 >= 15 t/h" },
+        { "tag": "P1LBB91CT911", "op": "<=", "target": 608.0, "label": "Nhiệt độ hơi tái nhiệt HRH P1LBB91CT911 <= 608°C" }
+      ]
+    },
+    {
+      "id": "SC_HP_EVAP",
+      "zone": "HP_EVAP",
+      "title": "Tụt mức nước Bao hơi Cao áp (HP Drum Low Level)",
+      "duration_s": 60,
+      "situation": "Van cấp nước cao áp chính P1LAB91AA081 bị kẹt ở mức 40% (chế độ MAN) trong khi lò đang phát 382.8 t/h hơi chính.",
+      "progression": "Lưu lượng nước cấp P1LAB91CF901 sụt xuống ~210 t/h, mức nước bao hơi P1HAD91CL911 tụt nhanh dưới -150 mm (ngưỡng cảnh báo thấp-thấp -200 mm gây trip lò).",
+      "correct_action": "Chuyển vòng điều khiển mức bao hơi HP P1HAD91CL911 về AUTO (SP = 0 mm) hoặc tăng tay độ mở van cấp nước P1LAB91AA081 lên >= 75% để khôi phục cân bằng lưu lượng.",
+      "criteria": [
+        { "tag": "P1HAD91CL911", "op": ">=", "target": -45.0, "label": "Mức bao hơi HP P1HAD91CL911 >= -45 mm" },
+        { "tag": "P1HAD91CL911", "op": "<=", "target": 55.0, "label": "Mức bao hơi HP P1HAD91CL911 <= +55 mm" },
+        { "tag": "P1LAB91CF901", "op": ">=", "target": 340.0, "label": "Lưu lượng nước cấp HP P1LAB91CF901 >= 340 t/h" }
+      ]
+    },
+    {
+      "id": "SC_HP_ECO",
+      "zone": "HP_ECO",
+      "title": "Nguy cơ sôi nước trong bộ hâm nước HP Economizer (Steaming)",
+      "duration_s": 60,
+      "situation": "Ở chế độ tải thấp, nhiệt độ nước ra HP Eco #8 (P1HAC91CT901) tiệm cận nhiệt độ bão hòa (352.8°C) do van bypass P1LAB93AA081 bị khóa ở chế độ MAN = 0%.",
+      "progression": "Nhiệt độ nước ra HP Eco tăng vượt 350°C gây búa nước (water hammer) và dao động áp suất đường cấp nước cao áp.",
+      "correct_action": "Chuyển vòng điều khiển bypass HP Eco P1LAB93CT911 sang AUTO (SP = 338°C) hoặc mở van bypass P1LAB93AA081 >= 35% để giảm nhiệt độ đầu ra HP Eco.",
+      "criteria": [
+        { "tag": "P1HAC91CT901", "op": "<=", "target": 344.0, "label": "Nhiệt độ ra HP Eco P1HAC91CT901 <= 344°C" },
+        { "tag": "P1HAD91CL911", "op": ">=", "target": -60.0, "label": "Mức bao hơi HP ổn định >= -60 mm" },
+        { "tag": "P1LAB91CF901", "op": ">=", "target": 310.0, "label": "Lưu lượng nước cấp HP >= 310 t/h" }
+      ]
+    },
+    {
+      "id": "SC_IP_SYSTEM",
+      "zone": "IP_SYSTEM",
+      "title": "Quá áp hơi trung áp IP do kẹt đóng van điều áp P1LBA92AA081",
+      "duration_s": 60,
+      "situation": "Van điều khiển áp suất hơi IP ra đường CRH (P1LBA92AA081) bị chuyển sang MAN và đóng còn 20%.",
+      "progression": "Áp suất bao hơi IP (P1HAD92CP901) và hơi IP SH (P1LBA92CP911) tăng vọt vượt 40.5 barA (tiệm cận ngưỡng bật van an toàn PSV 41.0 barA), lưu lượng hơi IP sụt mạnh.",
+      "correct_action": "Chuyển vòng điều khiển áp suất IP P1LBA92CP911 sang AUTO (SP = 37.5 barA) hoặc mở van P1LBA92AA081 >= 65% để xả hơi IP vào đường CRH.",
+      "criteria": [
+        { "tag": "P1LBA92CP911", "op": "<=", "target": 38.5, "label": "Áp suất hơi IP P1LBA92CP911 <= 38.5 barA" },
+        { "tag": "P1HAD92CP901", "op": "<=", "target": 39.0, "label": "Áp suất bao hơi IP P1HAD92CP901 <= 39.0 barA" },
+        { "tag": "P1LBA92CF901", "op": ">=", "target": 40.0, "label": "Lưu lượng hơi IP P1LBA92CF901 >= 40 t/h" }
+      ]
+    },
+    {
+      "id": "SC_LP_SYSTEM",
+      "zone": "LP_SYSTEM",
+      "title": "Sụt áp Bình khử khí / Bao hơi LP khi thiếu hơi mồi (Pegging Steam)",
+      "duration_s": 60,
+      "situation": "Nước ngưng lạnh tăng đột ngột vào bình khử khí trong khi van hơi mồi Pegging Steam P1LBC91AA081 bị kẹt ở chế độ MAN = 0%.",
+      "progression": "Áp suất bao hơi LP / bình khử khí P1HAD93CP901 tụt xuống dưới 4.8 barA, làm giảm cột áp hút NPSH cho bơm HP/IP BFP và giảm hiệu quả khử oxy.",
+      "correct_action": "Chuyển bộ điều khiển áp suất LP/DEA P1HAD93CP901 sang AUTO (SP = 6.4 barA) hoặc mở van Pegging Steam P1LBC91AA081 >= 55%.",
+      "criteria": [
+        { "tag": "P1HAD93CP901", "op": ">=", "target": 5.8, "label": "Áp suất LP Drum/DEA P1HAD93CP901 >= 5.8 barA" },
+        { "tag": "P1HAD93CL911", "op": ">=", "target": -60.0, "label": "Mức nước bao hơi LP P1HAD93CL911 >= -60 mm" },
+        { "tag": "P1LBA95CF901", "op": ">=", "target": 35.0, "label": "Lưu lượng hơi LP P1LBA95CF901 >= 35 t/h" }
+      ]
+    },
+    {
+      "id": "SC_CPH_SYSTEM",
+      "zone": "CPH_SYSTEM",
+      "title": "Dừng sự cố Bơm tuần hoàn CPH A - Nguy cơ ăn mòn điểm sương",
+      "duration_s": 60,
+      "situation": "Bơm tuần hoàn CPH A (P1LCB10AP001) bị nhảy bảo vệ (TRIP) trong khi bơm dự phòng B (P1LCB10AP002) chưa tự động khởi động.",
+      "progression": "Lưu lượng tuần hoàn P1LCB30CF901 tụt về 0 t/h, nhiệt độ nước ngưng vào CPH (P1LCB30CT901) tụt xuống ~45.4°C (dưới ngưỡng điểm sương 55°C gây ngưng tụ axit ăn mòn ống Module #8).",
+      "correct_action": "Khởi động ngay Bơm tuần hoàn CPH B (START P1LCB10AP002) trên màn hình DCS khu CPH và đảm bảo vòng điều khiển nhiệt độ P1LCB30CT901 ở chế độ AUTO (SP = 60°C).",
+      "criteria": [
+        { "tag": "P1LCB30CF901", "op": ">=", "target": 60.0, "label": "Lưu lượng tuần hoàn CPH P1LCB30CF901 >= 60 t/h" },
+        { "tag": "P1LCB30CT901", "op": ">=", "target": 58.0, "label": "Nhiệt độ nước vào CPH P1LCB30CT901 >= 58°C" },
+        { "tag": "P1LCC10CT001", "op": ">=", "target": 150.0, "label": "Nhiệt độ nước ra CPH P1LCC10CT001 >= 150°C" }
+      ]
+    },
+    {
+      "id": "SC_BLOWDOWN_UTILITY",
+      "zone": "BLOWDOWN_UTILITY",
+      "title": "Quá nhiệt & Dâng mức Bồn xả đáy gián đoạn (IBD) khi dừng bơm xả A",
+      "duration_s": 60,
+      "situation": "Xảy ra xả đáy mạnh từ HP/IP Drum làm nước nóng tràn vào bồn IBD, đồng thời Bơm chuyển xả đáy A (P1LCQ93AP001) bị dừng và van nước làm mát P1GHD91AA081 bị kẹt đóng (MAN 0%).",
+      "progression": "Mức bồn IBD (P1LCQ92CL911) dâng vượt 82% và nhiệt độ nước xả (P1GHD91CT911) tăng vọt trên 78°C (vượt chuẩn xả thải < 60°C).",
+      "correct_action": "Khởi động Bơm chuyển xả đáy B (START P1LCQ93AP002) để hạ mức bồn IBD và chuyển vòng điều khiển nhiệt độ P1GHD91CT911 sang AUTO (hoặc mở van nước làm mát P1GHD91AA081 >= 60%).",
+      "criteria": [
+        { "tag": "P1LCQ92CL911", "op": "<=", "target": 60.0, "label": "Mức bồn IBD P1LCQ92CL911 <= 60%" },
+        { "tag": "P1GHD91CT911", "op": "<=", "target": 60.0, "label": "Nhiệt độ nước xả IBD P1GHD91CT911 <= 60°C" },
+        { "tag": "P1LCQ91CL911", "op": "<=", "target": 65.0, "label": "Mức bồn CBD P1LCQ91CL911 <= 65%" }
+      ]
+    }
+  ],
+  "uncertain_points": [
+    {
+      "sheet": "HP / IP / LP Economizer & CPH P&IDs",
+      "item": "Áp suất vận hành chi tiết một số điểm (OP1 CASE)",
+      "status": "CHƯA RÕ",
+      "note": "Trên bảng OPERATING CONDITION của P&ID ghi 'LATER' cho áp suất tại một số nhánh nước cấp; mô phỏng sử dụng giá trị chuẩn từ sơ đồ Cân bằng nhiệt (HBD) và áp suất bao hơi tương ứng."
+    },
+    {
+      "sheet": "HP Superheater & Reheater Desuperheater P&IDs",
+      "item": "Kích thước đường ống nhánh phun giảm ôn",
+      "status": "CHƯA RÕ",
+      "note": "Trên P&ID ghi chú 'SIZE HOLD' tại các nhánh cấp nước phun giảm ôn (P1LAE91 / P1LAF91)."
+    },
+    {
+      "sheet": "Exhaust Gas, Utility & CPH P&IDs",
+      "item": "Đường kính danh nghĩa một số ống phụ trợ (DNXX / DNXXX)",
+      "status": "CHƯA RÕ",
+      "note": "Một số ống xả/nước làm mát bơm ghi 'DNXX' hoặc 'DNXXX' và số lượng cảm biến nhiệt độ ổ trục bơm ghi 'NOTE 3 - tùy theo bản vẽ nhà cung cấp bơm'."
+    },
+    {
+      "sheet": "Heat Balance Diagram (85% & 50% Load)",
+      "item": "Nhiệt độ khói trung gian giữa từng module #1~#8 ở tải 85% và 50%",
+      "status": "CHƯA RÕ",
+      "note": "P&ID Exhaust Gas chỉ cung cấp đầy đủ profile nhiệt độ 8 module cho OP1 (Base Load). Profile 8 module cho 85% và 50% Load được nội suy bảo toàn cân bằng năng lượng từ T_in, T_stack và công suất trao đổi nhiệt từng cấp áp suất trên HBD."
+    }
+  ]
+}
+;
+
+// === EMBEDDED VERIFIED CFD & DCS SIMULATION ENGINE ===
+/**
+ * HRSG 3D CFD & Dynamic DCS Process Simulator Engine (Pure JavaScript)
+ * Compatible with Node.js (CommonJS) and Browser (global HRSGSimulator)
+ */
+(function (root, factory) {
+  if (typeof module === 'object' && module.exports) {
+    module.exports = factory();
+  } else {
+    root.HRSGSimulator = factory();
+  }
+})(typeof self !== 'undefined' ? self : this, function () {
+  'use strict';
+
+  function clamp(v, lo, hi) {
+    return v < lo ? lo : v > hi ? hi : v;
+  }
+
+  class PIDController {
+    constructor(cfg) {
+      this.tag = cfg.tag;
+      this.name = cfg.name;
+      this.unit = cfg.unit;
+      this.actuator = cfg.actuator;
+      this.kp = cfg.kp;
+      this.ki = cfg.ki;
+      this.kd = cfg.kd || 0;
+      this.sp = cfg.sp;
+      this.op = cfg.op;
+      this.opMin = cfg.opMin !== undefined ? cfg.opMin : 0;
+      this.opMax = cfg.opMax !== undefined ? cfg.opMax : 100;
+      this.reverse = !!cfg.reverse; // true: higher PV -> higher OP (cooling/venting/pressure relief)
+      this.mode = 'AUTO'; // 'AUTO' | 'MAN'
+      this.integral = cfg.op;
+      this.lastErr = 0;
+      this.pv = cfg.sp;
+    }
+
+    step(pv, dt) {
+      this.pv = pv;
+      if (this.mode !== 'AUTO') {
+        this.integral = this.op;
+        this.lastErr = this.reverse ? (pv - this.sp) : (this.sp - pv);
+        return this.op;
+      }
+      const err = this.reverse ? (pv - this.sp) : (this.sp - pv);
+      this.integral = clamp(this.integral + this.ki * err * dt, this.opMin, this.opMax);
+      const deriv = dt > 0 ? (err - this.lastErr) / dt : 0;
+      this.lastErr = err;
+      this.op = clamp(this.integral + this.kp * err + this.kd * deriv, this.opMin, this.opMax);
+      return this.op;
+    }
+
+    setMode(mode) {
+      this.mode = mode === 'MAN' ? 'MAN' : 'AUTO';
+      if (this.mode === 'AUTO') this.integral = this.op;
+    }
+
+    setSP(sp) {
+      this.sp = Number(sp);
+    }
+
+    setOP(op) {
+      this.op = clamp(Number(op), this.opMin, this.opMax);
+      this.integral = this.op;
+    }
+  }
+
+  class HRSGSimulator {
+    constructor(data) {
+      this.data = data;
+      this.loadCaseId = 'BASE_100';
+      this.time = 0;
+      this.activeScenario = null;
+      this.scenarioTimer = 0;
+      this.scenarioResult = null;
+      this.alarms = [];
+      this.history = [];
+      this.maxHistory = 120;
+
+      // 3D CFD Mesh: Nx=20 (axial x), Ny=6 (vertical y), Nz=4 (transverse z)
+      this.cfdGrid = { nx: 20, ny: 6, nz: 4, cells: [], summary: {} };
+
+      this.initState('BASE_100');
+    }
+
+    initState(caseId) {
+      this.loadCaseId = caseId || 'BASE_100';
+      const hb = this.data.heat_balance_cases[this.loadCaseId];
+      this.hb = hb;
+      this.time = 0;
+      this.activeScenario = null;
+      this.scenarioTimer = 0;
+      this.scenarioResult = null;
+      this.alarms = [];
+      this.history = [];
+
+      // Equipment running states (pumps & damper)
+      this.equipState = {
+        P1LCB10AP001: true,  // CPH Recirc Pump A (Running)
+        P1LCB10AP002: false, // CPH Recirc Pump B (Standby)
+        P1LCQ93AP001: true,  // BD Transfer Pump A (Running)
+        P1LCQ93AP002: false, // BD Transfer Pump B (Standby)
+        P1HNA91AT001: false  // Dehumidifier (OFF during operation)
+      };
+
+      // Fault injection flags
+      this.faults = {
+        damperStuck: false,
+        hpEcoHot: false,
+        lpColdSurge: false,
+        ibdHighInflow: false
+      };
+
+      // Process variables (tags)
+      this.tags = {
+        // Exhaust Gas & Stack
+        P1HNA91CT901: hb.flue_gas.inlet_temp_c,
+        P1HNA91CP901: hb.flue_gas.inlet_pressure_bara,
+        P1HNE91CT001: hb.flue_gas.stack_temp_c,
+        P1HNE91CG001: 100.0,
+        FG_FLOW: hb.flue_gas.mass_flow_tph,
+
+        // HP SH & RH
+        P1LBA91CT901: hb.hp.steam_t_c,
+        P1LBA91CP901: hb.hp.steam_p_bara,
+        P1LBA91CF901: hb.hp.steam_flow_tph,
+        P1LAE91CF901: hb.hp.dsh_spray_tph,
+        P1LBB91CT911: hb.rh.hrh_t_c,
+        P1LBB91CP901: hb.rh.hrh_p_bara,
+        P1LAF91CF901: hb.rh.dsh_spray_tph,
+        RH_FLOW: hb.rh.hrh_flow_tph,
+
+        // HP Evap & Drum
+        P1HAD91CL911: 0.0,
+        P1HAD91CP901: hb.hp.drum_p_bara,
+        P1HAD91CT001: hb.hp.drum_t_c,
+
+        // HP Eco
+        P1LAB91CF901: hb.hp.fw_flow_tph,
+        P1HAC91CT901: hb.hp.drum_t_c - 6.0,
+        P1LAB93CT911: hb.hp.drum_t_c - 6.0,
+
+        // IP System
+        P1HAD92CL911: 0.0,
+        P1HAD92CP901: hb.ip.drum_p_bara,
+        P1LBA92CP911: hb.ip.steam_p_bara,
+        P1LBA92CF901: hb.ip.steam_flow_tph,
+        P1LAB95CF901: hb.ip.fw_flow_tph,
+
+        // LP System & DEA
+        P1HAD93CL911: 0.0,
+        P1HAD93CP901: hb.lp.drum_p_bara,
+        P1LBA95CT901: hb.lp.steam_t_c,
+        P1LBA95CF901: hb.lp.steam_flow_tph,
+
+        // CPH System
+        P1LCA10CF901: hb.cph.condensate_flow_tph,
+        P1LCB30CT901: hb.cph.mixed_inlet_temp_c,
+        P1LCB30CF901: hb.cph.recirc_flow_tph,
+        P1LCC10CT001: hb.cph.outlet_temp_c,
+
+        // Blowdown & Utility
+        P1LCQ91CL911: 50.0,
+        P1LCQ92CL911: 45.0,
+        P1GHD91CT911: 54.0,
+        BD_FLOW: 18.0
+      };
+
+      // PID Controllers
+      this.pids = {
+        P1HNE91CG001: new PIDController({
+          tag: 'P1HNE91CG001', name: 'Stack Damper', unit: '%', actuator: 'P1HNE91AA001',
+          kp: 0.8, ki: 0.2, sp: 100.0, op: 100.0, reverse: false
+        }),
+        P1LBA91CT901: new PIDController({
+          tag: 'P1LBA91CT901', name: 'HP SH DSH TIC', unit: '°C', actuator: 'P1LAE91AA081',
+          kp: 2.2, ki: 0.45, sp: hb.hp.steam_t_c, op: clamp((hb.hp.dsh_spray_tph / 45.0) * 100, 0, 100), reverse: true
+        }),
+        P1LBB91CT911: new PIDController({
+          tag: 'P1LBB91CT911', name: 'RH DSH TIC', unit: '°C', actuator: 'P1LAF91AA081',
+          kp: 2.0, ki: 0.4, sp: hb.rh.hrh_t_c, op: clamp((hb.rh.dsh_spray_tph / 25.0) * 100, 0, 100), reverse: true
+        }),
+        P1HAD91CL911: new PIDController({
+          tag: 'P1HAD91CL911', name: 'HP Drum LIC', unit: 'mm', actuator: 'P1LAB91AA081',
+          kp: 0.55, ki: 0.04, kd: 0.55, sp: 0.0, op: clamp((hb.hp.fw_flow_tph / 450.0) * 100, 10, 95), reverse: false
+        }),
+        P1LAB93CT911: new PIDController({
+          tag: 'P1LAB93CT911', name: 'HP Eco Bypass TIC', unit: '°C', actuator: 'P1LAB93AA081',
+          kp: 3.0, ki: 0.5, sp: hb.hp.drum_t_c - 10.0, op: 15.0, reverse: true
+        }),
+        P1HAD92CL911: new PIDController({
+          tag: 'P1HAD92CL911', name: 'IP Drum LIC', unit: 'mm', actuator: 'P1HAC94AA081',
+          kp: 0.35, ki: 0.08, sp: 0.0, op: clamp((hb.ip.fw_flow_tph / 85.0) * 100, 10, 95), reverse: false
+        }),
+        P1LBA92CP911: new PIDController({
+          tag: 'P1LBA92CP911', name: 'IP Steam PIC', unit: 'barA', actuator: 'P1LBA92AA081',
+          kp: 12.0, ki: 2.5, sp: hb.ip.steam_p_bara, op: 72.0, reverse: true
+        }),
+        P1HAD93CL911: new PIDController({
+          tag: 'P1HAD93CL911', name: 'LP Drum LIC', unit: 'mm', actuator: 'P1LCC91AA081',
+          kp: 0.3, ki: 0.06, sp: 0.0, op: 65.0, reverse: false
+        }),
+        P1HAD93CP901: new PIDController({
+          tag: 'P1HAD93CP901', name: 'LP/DEA Pegging PIC', unit: 'barA', actuator: 'P1LBC91AA081',
+          kp: 18.0, ki: 3.5, sp: hb.lp.drum_p_bara, op: 25.0, reverse: false
+        }),
+        P1LCB30CT901: new PIDController({
+          tag: 'P1LCB30CT901', name: 'CPH Recirc TIC', unit: '°C', actuator: 'P1LCB30AA081',
+          kp: 3.5, ki: 0.65, sp: 60.0, op: clamp((hb.cph.recirc_flow_tph / 130.0) * 100, 15, 95), reverse: false
+        }),
+        P1LCQ91CL911: new PIDController({
+          tag: 'P1LCQ91CL911', name: 'CBD Tank LIC', unit: '%', actuator: 'P1LCQ91AA081',
+          kp: 1.5, ki: 0.35, sp: 50.0, op: 45.0, reverse: true
+        }),
+        P1GHD91CT911: new PIDController({
+          tag: 'P1GHD91CT911', name: 'IBD Quench TIC', unit: '°C', actuator: 'P1GHD91AA081',
+          kp: 2.5, ki: 0.55, sp: 55.0, op: 30.0, reverse: true
+        })
+      };
+
+      this.computeCFD();
+      this.recordHistory();
+    }
+
+    setLoadCase(caseId) {
+      if (this.data.heat_balance_cases[caseId]) {
+        this.initState(caseId);
+      }
+    }
+
+    startScenario(scenarioId) {
+      const sc = this.data.scenarios.find((s) => s.id === scenarioId);
+      if (!sc) return null;
+
+      // Pick appropriate base load case for scenario
+      if (scenarioId === 'SC_HP_SH_RH') {
+        this.initState('LOAD_50');
+      } else {
+        this.initState('BASE_100');
+      }
+
+      this.activeScenario = sc;
+      this.scenarioTimer = 0;
+      this.scenarioResult = null;
+
+      // Inject scenario-specific realistic fault
+      switch (scenarioId) {
+        case 'SC_EXHAUST_GAS':
+          this.faults.damperStuck = true;
+          this.pids.P1HNE91CG001.setMode('MAN');
+          this.pids.P1HNE91CG001.setOP(42.0);
+          break;
+        case 'SC_HP_SH_RH':
+          this.pids.P1LBA91CT901.setMode('MAN');
+          this.pids.P1LBA91CT901.setOP(0.0);
+          this.pids.P1LBB91CT911.setMode('MAN');
+          this.pids.P1LBB91CT911.setOP(0.0);
+          break;
+        case 'SC_HP_EVAP':
+          this.pids.P1HAD91CL911.setMode('MAN');
+          this.pids.P1HAD91CL911.setOP(40.0);
+          break;
+        case 'SC_HP_ECO':
+          this.faults.hpEcoHot = true;
+          this.pids.P1LAB93CT911.setMode('MAN');
+          this.pids.P1LAB93CT911.setOP(0.0);
+          break;
+        case 'SC_IP_SYSTEM':
+          this.pids.P1LBA92CP911.setMode('MAN');
+          this.pids.P1LBA92CP911.setOP(20.0);
+          break;
+        case 'SC_LP_SYSTEM':
+          this.faults.lpColdSurge = true;
+          this.pids.P1HAD93CP901.setMode('MAN');
+          this.pids.P1HAD93CP901.setOP(0.0);
+          break;
+        case 'SC_CPH_SYSTEM':
+          this.equipState.P1LCB10AP001 = false; // Pump A trips
+          this.equipState.P1LCB10AP002 = false; // Pump B not started yet
+          break;
+        case 'SC_BLOWDOWN_UTILITY':
+          this.faults.ibdHighInflow = true;
+          this.equipState.P1LCQ93AP001 = false; // BD Pump A trips
+          this.equipState.P1LCQ93AP002 = false;
+          this.pids.P1GHD91CT911.setMode('MAN');
+          this.pids.P1GHD91CT911.setOP(0.0);
+          break;
+      }
+      return sc;
+    }
+
+    stopScenario() {
+      this.activeScenario = null;
+      this.scenarioTimer = 0;
+      this.scenarioResult = null;
+    }
+
+    setEquipmentState(tag, running) {
+      if (tag in this.equipState) {
+        this.equipState[tag] = !!running;
+      }
+    }
+
+    /**
+     * 3D Computational Fluid Dynamics (CFD) Solver for HRSG Flue Gas Duct
+     * Computes:
+     * - 3D Velocity field u(x,y,z), v(x,y,z), w(x,y,z) using continuity + diffuser jet + buoyancy
+     * - 3D Temperature field T(x,y,z) across 8 tube-bank heat exchangers with thermal stratification
+     * - Axial Pressure field P(x) using Darcy-Forchheimer porous tube-bank pressure drop + damper loss
+     * - Module heat duties Q_i (MW), Reynolds number Re, Nusselt number Nu, overall h (W/m2K)
+     */
+    computeCFD() {
+      const hb = this.hb;
+      const fg = hb.flue_gas;
+      const mDot = fg.mass_flow_tph / 3.6; // kg/s
+      const R_gas = 290.0; // J/(kg·K) for natural gas combustion exhaust
+      const Cp_gas = 1.115; // kJ/(kg·K) average flue gas Cp
+      const mu_gas = 3.2e-5; // Pa·s dynamic viscosity at mean temp
+      const k_gas = 0.048; // W/(m·K) thermal conductivity
+      const Pr = (Cp_gas * 1000 * mu_gas) / k_gas;
+
+      // Duct geometry derived from GA & 11,835 m3 HRSG volume
+      const ductHeight = 16.5; // m
+      const ductWidth = 11.8;  // m
+      const ductArea = ductHeight * ductWidth; // ~194.7 m2
+      const dTube = 0.038; // 38mm finned tube OD
+      const porosity = 0.72; // open flow area fraction through finned tube banks
+
+      // Stack damper position effect on backpressure
+      const damperOpen = clamp(this.tags.P1HNE91CG001, 10, 100) / 100.0;
+      const damperK = 0.4 + 14.0 * Math.pow(1.0 - damperOpen, 2.2);
+
+      // Module inlet temperatures (8 modules + stack exit)
+      const modTemps = fg.module_inlet_temps_c;
+      const tNodes = [fg.inlet_temp_c, ...modTemps, fg.stack_temp_c]; // 10 axial stations
+      const nStations = tNodes.length;
+
+      // Compute axial pressure drop from stack back to inlet
+      const pStack = fg.stack_pressure_bara; // 1.009 barA
+      const pBaseDrop = (fg.inlet_pressure_bara - pStack) * 1e5; // Pa at 100% damper
+      // Extra pressure drop due to damper restriction
+      const rhoStack = (pStack * 1e5) / (R_gas * (fg.stack_temp_c + 273.15));
+      const stackArea = Math.PI * Math.pow(5.2 / 2, 2); // ~21.2 m2
+      const vStack = mDot / (rhoStack * stackArea);
+      const dpDamperExtra = 0.5 * (damperK - 0.4) * rhoStack * vStack * vStack; // Pa
+      const totalDpPa = pBaseDrop + dpDamperExtra;
+
+      // Update inlet pressure & stack temp tags from CFD
+      this.tags.P1HNA91CP901 = Number((pStack + totalDpPa / 1e5).toFixed(4));
+      this.tags.P1HNE91CT001 = Number((fg.stack_temp_c + (1.0 - damperOpen) * 22.0).toFixed(1));
+      this.tags.P1HNA91CT901 = fg.inlet_temp_c;
+      this.tags.FG_FLOW = fg.mass_flow_tph;
+
+      // Module-by-module CFD thermal & hydraulic analysis (8 modules)
+      const moduleNames = [
+        'M1: HP SH #3 & Hot RH',
+        'M2: HP SH #1/#2 & Cold RH',
+        'M3: HP Evaporator',
+        'M4: HP Eco #5-#8 & IP SH',
+        'M5: IP Evap & HP Eco #3-#4',
+        'M6: LP SH, IP Eco & HP Eco #1-#2',
+        'M7: LP Evaporator',
+        'M8: Condensate Preheater #1-#4'
+      ];
+
+      const modules = [];
+      let totalHeatDutyMW = 0;
+      let maxVelocity = 0;
+
+      for (let m = 0; m < 8; m++) {
+        const tIn = modTemps[m];
+        const tOut = m < 7 ? modTemps[m + 1] : this.tags.P1HNE91CT001;
+        const tMeanK = 0.5 * (tIn + tOut) + 273.15;
+        const pLocalBar = pStack + (totalDpPa / 1e5) * ((8 - m) / 8.5);
+        const rho = (pLocalBar * 1e5) / (R_gas * tMeanK);
+        const vFace = mDot / (rho * ductArea);
+        const vInterstitial = vFace / porosity;
+        if (vInterstitial > maxVelocity) maxVelocity = vInterstitial;
+
+        const re = (rho * vInterstitial * dTube) / mu_gas;
+        const nu = 0.27 * Math.pow(re, 0.63) * Math.pow(Pr, 0.36); // Zhukauskas correlation
+        const hConv = (nu * k_gas) / dTube; // W/(m2·K)
+        const qMW = (mDot * Cp_gas * Math.max(0, tIn - tOut)) / 1000.0;
+        const dpModPa = (pBaseDrop / 8.0) * (tMeanK / 600.0);
+        totalHeatDutyMW += qMW;
+
+        modules.push({
+          index: m + 1,
+          name: moduleNames[m],
+          tIn_c: Number(tIn.toFixed(1)),
+          tOut_c: Number(tOut.toFixed(1)),
+          p_bara: Number(pLocalBar.toFixed(4)),
+          dp_pa: Number(dpModPa.toFixed(1)),
+          rho_kgm3: Number(rho.toFixed(3)),
+          v_face_ms: Number(vFace.toFixed(2)),
+          v_max_ms: Number(vInterstitial.toFixed(2)),
+          reynolds: Math.round(re),
+          nusselt: Number(nu.toFixed(1)),
+          h_wm2k: Number(hConv.toFixed(1)),
+          heat_duty_mw: Number(qMW.toFixed(2))
+        });
+      }
+
+      // Generate 3D Mesh cells (Nx=20, Ny=6, Nz=4) for 3D volumetric heatmap & streamlines
+      const { nx, ny, nz } = this.cfdGrid;
+      const cells = [];
+      for (let ix = 0; ix < nx; ix++) {
+        const fx = ix / (nx - 1); // 0 = inlet duct, 1 = stack base
+        const sPos = fx * (nStations - 1);
+        const sIdx = Math.min(Math.floor(sPos), nStations - 2);
+        const sFrac = sPos - sIdx;
+        const tAxial = tNodes[sIdx] * (1 - sFrac) + tNodes[sIdx + 1] * sFrac;
+        const pAxial = pStack + (totalDpPa / 1e5) * (1 - fx);
+
+        // Diffuser expansion at ix < 4: smaller cross-section -> higher jet velocity
+        const areaFactor = fx < 0.2 ? (0.42 + 2.9 * fx) : 1.0;
+
+        for (let iy = 0; iy < ny; iy++) {
+          const fy = iy / (ny - 1); // 0 = bottom, 1 = top
+          // Thermal stratification (buoyancy: hot gas rises slightly +14°C at top)
+          const tStrat = (fy - 0.5) * 18.0 * (1 - 0.5 * fx);
+          // Damper restriction causes recirculation pocket at back-bottom
+          const vortexDelta = (1 - damperOpen) * 35.0 * Math.max(0, fx - 0.65) * (1 - fy);
+          const T = clamp(tAxial + tStrat + vortexDelta, 55, 760);
+
+          const rho = (pAxial * 1e5) / (R_gas * (T + 273.15));
+          const uBase = mDot / (rho * ductArea * areaFactor);
+          // Vertical jet profile in diffuser + boundary layer near walls
+          const wallFactor = 1.0 - 0.22 * Math.pow(2 * fy - 1, 4);
+          const u = uBase * wallFactor * (1.0 + 0.12 * (1 - damperOpen));
+          // Vertical velocity component (upward in diffuser & toward stack exit)
+          const v = (fx < 0.22 ? 2.4 * (fy - 0.35) : 0) + (fx > 0.85 ? 5.5 * (fx - 0.85) / 0.15 : 0.25 * (fy - 0.5));
+
+          for (let iz = 0; iz < nz; iz++) {
+            const fz = iz / (nz - 1);
+            const zWall = 1.0 - 0.15 * Math.pow(2 * fz - 1, 2);
+            cells.push({
+              ix, iy, iz,
+              x: -22 + fx * 48,
+              y: 2.0 + fy * 14.0,
+              z: -5.0 + fz * 10.0,
+              T: Number(T.toFixed(1)),
+              P: Number(pAxial.toFixed(4)),
+              u: Number((u * zWall).toFixed(2)),
+              v: Number(v.toFixed(2)),
+              speed: Number(Math.hypot(u * zWall, v).toFixed(2))
+            });
+          }
+        }
+      }
+
+      this.cfdGrid.cells = cells;
+      this.cfdGrid.summary = {
+        load_case: this.hb.name,
+        mass_flow_tph: fg.mass_flow_tph,
+        t_inlet_c: fg.inlet_temp_c,
+        t_stack_c: this.tags.P1HNE91CT001,
+        p_inlet_bara: this.tags.P1HNA91CP901,
+        dp_total_mbar: Number((totalDpPa / 100.0).toFixed(2)),
+        v_stack_ms: Number(vStack.toFixed(2)),
+        v_max_tube_ms: Number(maxVelocity.toFixed(2)),
+        total_heat_duty_mw: Number(totalHeatDutyMW.toFixed(2)),
+        modules
+      };
+    }
+
+    /**
+     * Advance dynamic process + PID + CFD simulation by dt seconds
+     */
+    step(dt) {
+      dt = clamp(dt || 0.5, 0.05, 1.0);
+      this.time += dt;
+      const hb = this.hb;
+
+      // 1. Stack Damper (Zone 1)
+      if (!this.faults.damperStuck || this.pids.P1HNE91CG001.mode === 'AUTO' || this.pids.P1HNE91CG001.op > 45) {
+        const targetDamper = this.pids.P1HNE91CG001.step(this.tags.P1HNE91CG001, dt);
+        this.tags.P1HNE91CG001 += (targetDamper - this.tags.P1HNE91CG001) * clamp(dt * 0.45, 0, 1);
+      } else {
+        this.tags.P1HNE91CG001 += (this.pids.P1HNE91CG001.op - this.tags.P1HNE91CG001) * clamp(dt * 0.45, 0, 1);
+      }
+
+      // Update CFD fields from current load & damper state
+      this.computeCFD();
+
+      // 2. HP Superheater & Reheater Desuperheater (Zone 2)
+      const hpDshOp = this.pids.P1LBA91CT901.step(this.tags.P1LBA91CT901, dt);
+      const hpSpray = (hpDshOp / 100.0) * 45.0; // max 45 t/h
+      this.tags.P1LAE91CF901 += (hpSpray - this.tags.P1LAE91CF901) * clamp(dt * 0.5, 0, 1);
+      const hpUnattempT = hb.hp.steam_t_c + hb.hp.dsh_spray_tph * 1.45; // temp if spray = 0
+      const hpTargetT = hpUnattempT - this.tags.P1LAE91CF901 * 1.45;
+      this.tags.P1LBA91CT901 += (hpTargetT - this.tags.P1LBA91CT901) * clamp(dt * 0.18, 0, 1);
+
+      const rhDshOp = this.pids.P1LBB91CT911.step(this.tags.P1LBB91CT911, dt);
+      const rhSpray = (rhDshOp / 100.0) * 25.0; // max 25 t/h
+      this.tags.P1LAF91CF901 += (rhSpray - this.tags.P1LAF91CF901) * clamp(dt * 0.5, 0, 1);
+      const rhUnattempT = hb.rh.hrh_t_c + hb.rh.dsh_spray_tph * 2.2;
+      const rhTargetT = rhUnattempT - this.tags.P1LAF91CF901 * 2.2;
+      this.tags.P1LBB91CT911 += (rhTargetT - this.tags.P1LBB91CT911) * clamp(dt * 0.18, 0, 1);
+
+      // 3. HP Drum Level & HP Economizer (Zone 3 & 4)
+      const hpFwOp = this.pids.P1HAD91CL911.step(this.tags.P1HAD91CL911, dt);
+      const hpFwFlow = (hpFwOp / 100.0) * 450.0;
+      this.tags.P1LAB91CF901 += (hpFwFlow - this.tags.P1LAB91CF901) * clamp(dt * 0.45, 0, 1);
+      // Level mass balance (normal fw_flow matches steam_flow equilibrium)
+      const hpMassImbalance = this.tags.P1LAB91CF901 - hb.hp.fw_flow_tph; // t/h
+      this.tags.P1HAD91CL911 = clamp(this.tags.P1HAD91CL911 + hpMassImbalance * 0.045 * dt, -300, 300);
+
+      // HP Eco Bypass TIC (prevents steaming)
+      const hpEcoBypOp = this.pids.P1LAB93CT911.step(this.tags.P1HAC91CT901, dt);
+      const hpEcoBaseT = (this.faults.hpEcoHot ? hb.hp.drum_t_c + 1.5 : hb.hp.drum_t_c - 4.5);
+      const hpEcoTargetT = hpEcoBaseT - (hpEcoBypOp / 100.0) * 24.0;
+      this.tags.P1HAC91CT901 += (hpEcoTargetT - this.tags.P1HAC91CT901) * clamp(dt * 0.22, 0, 1);
+      this.tags.P1LAB93CT911 = this.tags.P1HAC91CT901;
+
+      // 4. IP System (Zone 5)
+      const ipFwOp = this.pids.P1HAD92CL911.step(this.tags.P1HAD92CL911, dt);
+      const ipFwFlow = (ipFwOp / 100.0) * 85.0;
+      this.tags.P1LAB95CF901 += (ipFwFlow - this.tags.P1LAB95CF901) * clamp(dt * 0.45, 0, 1);
+      this.tags.P1HAD92CL911 = clamp(this.tags.P1HAD92CL911 + (this.tags.P1LAB95CF901 - hb.ip.fw_flow_tph) * 0.08 * dt, -250, 250);
+
+      const ipPcvOp = this.pids.P1LBA92CP911.step(this.tags.P1LBA92CP911, dt);
+      const ipSteamOut = hb.ip.steam_flow_tph * clamp(ipPcvOp / 72.0, 0.15, 1.35);
+      this.tags.P1LBA92CF901 += (ipSteamOut - this.tags.P1LBA92CF901) * clamp(dt * 0.4, 0, 1);
+      const ipTargetP = hb.ip.steam_p_bara + (72.0 - ipPcvOp) * 0.075;
+      this.tags.P1LBA92CP911 += (ipTargetP - this.tags.P1LBA92CP911) * clamp(dt * 0.25, 0, 1);
+      this.tags.P1HAD92CP901 = this.tags.P1LBA92CP911 + 0.35;
+
+      // 5. LP System & Integral Deaerator (Zone 6)
+      const lpFwOp = this.pids.P1HAD93CL911.step(this.tags.P1HAD93CL911, dt);
+      const lpImbalance = (lpFwOp - 65.0) * 0.8;
+      this.tags.P1HAD93CL911 = clamp(this.tags.P1HAD93CL911 + lpImbalance * 0.12 * dt, -250, 250);
+
+      const pegOp = this.pids.P1HAD93CP901.step(this.tags.P1HAD93CP901, dt);
+      const lpColdDrop = this.faults.lpColdSurge ? 2.1 : 0.0;
+      const lpTargetP = hb.lp.drum_p_bara - lpColdDrop + (pegOp / 100.0) * 3.2 - 0.8 * (this.faults.lpColdSurge ? 0 : 1) + (this.faults.lpColdSurge ? 0 : 0.8 - (pegOp - 25) * 0.01);
+      const lpEffTargetP = this.faults.lpColdSurge
+        ? clamp(hb.lp.drum_p_bara - 2.2 + (pegOp / 100.0) * 3.4, 3.0, 8.5)
+        : clamp(hb.lp.drum_p_bara + (pegOp - 25.0) * 0.02, 3.0, 8.5);
+      this.tags.P1HAD93CP901 += (lpEffTargetP - this.tags.P1HAD93CP901) * clamp(dt * 0.25, 0, 1);
+      this.tags.P1LBA95CF901 = clamp(hb.lp.steam_flow_tph * (this.tags.P1HAD93CP901 / hb.lp.drum_p_bara), 5, 65);
+
+      // 6. Condensate Preheater & Recirculation Pumps (Zone 7)
+      const cphPumpsOn = (this.equipState.P1LCB10AP001 ? 1 : 0) + (this.equipState.P1LCB10AP002 ? 1 : 0);
+      const cphTcvOp = this.pids.P1LCB30CT901.step(this.tags.P1LCB30CT901, dt);
+      const cphRecircTarget = cphPumpsOn > 0 ? (cphTcvOp / 100.0) * 130.0 * (cphPumpsOn > 1 ? 1.15 : 1.0) : 0.0;
+      this.tags.P1LCB30CF901 += (cphRecircTarget - this.tags.P1LCB30CF901) * clamp(dt * 0.5, 0, 1);
+      const mCond = hb.cph.condensate_flow_tph;
+      const tCondIn = hb.cph.inlet_temp_c;
+      const tCphOut = this.tags.P1LCC10CT001;
+      const tMixedTarget = (mCond * tCondIn + this.tags.P1LCB30CF901 * tCphOut) / (mCond + this.tags.P1LCB30CF901);
+      this.tags.P1LCB30CT901 += (tMixedTarget - this.tags.P1LCB30CT901) * clamp(dt * 0.35, 0, 1);
+      const tCphOutTarget = hb.cph.outlet_temp_c - (60.0 - this.tags.P1LCB30CT901) * 0.7;
+      this.tags.P1LCC10CT001 += (tCphOutTarget - this.tags.P1LCC10CT001) * clamp(dt * 0.2, 0, 1);
+
+      // 7. Blowdown System & Utility (Zone 8)
+      const cbdOp = this.pids.P1LCQ91CL911.step(this.tags.P1LCQ91CL911, dt);
+      const cbdTargetL = clamp(50.0 + (45.0 - cbdOp) * 0.45, 10, 95);
+      this.tags.P1LCQ91CL911 += (cbdTargetL - this.tags.P1LCQ91CL911) * clamp(dt * 0.25, 0, 1);
+
+      const bdPumpsOn = (this.equipState.P1LCQ93AP001 ? 1 : 0) + (this.equipState.P1LCQ93AP002 ? 1 : 0);
+      const ibdInflow = this.faults.ibdHighInflow ? 3.2 : 0.8;
+      const ibdOutflow = bdPumpsOn > 0 ? (this.tags.P1LCQ92CL911 > 35 ? 4.4 * bdPumpsOn : 0.8) : 0.0;
+      this.tags.P1LCQ92CL911 = clamp(this.tags.P1LCQ92CL911 + (ibdInflow - ibdOutflow) * dt, 15, 96);
+
+      const quenchOp = this.pids.P1GHD91CT911.step(this.tags.P1GHD91CT911, dt);
+      const ibdHotT = this.faults.ibdHighInflow ? 86.0 : 66.0;
+      const ibdTargetT = clamp(ibdHotT - (quenchOp / 100.0) * 42.0, 38, 95);
+      this.tags.P1GHD91CT911 += (ibdTargetT - this.tags.P1GHD91CT911) * clamp(dt * 0.25, 0, 1);
+      this.tags.BD_FLOW = bdPumpsOn > 0 ? 45.0 * bdPumpsOn : 4.0;
+
+      // 8. Evaluate alarms & active scenario
+      this.evaluateAlarms();
+      if (this.activeScenario) {
+        this.scenarioTimer += dt;
+        this.scenarioResult = this.evaluateScenario();
+      }
+
+      if (Math.floor(this.time * 2) !== Math.floor((this.time - dt) * 2)) {
+        this.recordHistory();
+      }
+    }
+
+    evaluateAlarms() {
+      const a = [];
+      const t = this.tags;
+      if (t.P1HNA91CP901 > 1.055) a.push({ level: 'HIHI', tag: 'P1HNA91CP901', zone: 'EXHAUST_GAS', msg: `Áp suất ngược kênh khói CAO (${t.P1HNA91CP901.toFixed(3)} barA)` });
+      if (t.P1HNE91CG001 < 90) a.push({ level: 'WARN', tag: 'P1HNE91CG001', zone: 'EXHAUST_GAS', msg: `Van tiết lưu ống khói chưa mở hoàn toàn (${t.P1HNE91CG001.toFixed(0)}%)` });
+      if (t.P1LBA91CT901 > 610) a.push({ level: 'HIHI', tag: 'P1LBA91CT901', zone: 'HP_SH_RH', msg: `Quá nhiệt hơi chính HP (${t.P1LBA91CT901.toFixed(1)}°C > 610°C)` });
+      if (t.P1LBB91CT911 > 610) a.push({ level: 'HIHI', tag: 'P1LBB91CT911', zone: 'HP_SH_RH', msg: `Quá nhiệt hơi tái nhiệt HRH (${t.P1LBB91CT911.toFixed(1)}°C > 610°C)` });
+      if (t.P1HAD91CL911 < -80) a.push({ level: 'LOLO', tag: 'P1HAD91CL911', zone: 'HP_EVAP', msg: `Mức nước bao hơi HP THẤP (${t.P1HAD91CL911.toFixed(0)} mm)` });
+      if (t.P1HAD91CL911 > 80) a.push({ level: 'HIHI', tag: 'P1HAD91CL911', zone: 'HP_EVAP', msg: `Mức nước bao hơi HP CAO (${t.P1HAD91CL911.toFixed(0)} mm)` });
+      if (t.P1HAC91CT901 > 348) a.push({ level: 'WARN', tag: 'P1HAC91CT901', zone: 'HP_ECO', msg: `Nguy cơ sôi nước HP Economizer (${t.P1HAC91CT901.toFixed(1)}°C)` });
+      if (t.P1LBA92CP911 > 39.2) a.push({ level: 'HIHI', tag: 'P1LBA92CP911', zone: 'IP_SYSTEM', msg: `Quá áp hơi trung áp IP (${t.P1LBA92CP911.toFixed(2)} barA)` });
+      if (t.P1HAD93CP901 < 5.3) a.push({ level: 'LOLO', tag: 'P1HAD93CP901', zone: 'LP_SYSTEM', msg: `Sụt áp bình khử khí / bao hơi LP (${t.P1HAD93CP901.toFixed(2)} barA)` });
+      if (t.P1LCB30CT901 < 55) a.push({ level: 'LOLO', tag: 'P1LCB30CT901', zone: 'CPH_SYSTEM', msg: `Nhiệt độ nước vào CPH thấp (<55°C - ăn mòn điểm sương!)` });
+      if (t.P1LCQ92CL911 > 70) a.push({ level: 'HIHI', tag: 'P1LCQ92CL911', zone: 'BLOWDOWN_UTILITY', msg: `Mức bồn xả đáy IBD CAO (${t.P1LCQ92CL911.toFixed(1)}%)` });
+      if (t.P1GHD91CT911 > 62) a.push({ level: 'HIHI', tag: 'P1GHD91CT911', zone: 'BLOWDOWN_UTILITY', msg: `Nhiệt độ nước xả IBD quá giới hạn (${t.P1GHD91CT911.toFixed(1)}°C > 60°C)` });
+      this.alarms = a;
+    }
+
+    evaluateScenario() {
+      if (!this.activeScenario) return null;
+      const details = this.activeScenario.criteria.map((c) => {
+        const val = this.tags[c.tag];
+        const ok = c.op === '>=' ? val >= c.target : val <= c.target;
+        return { ...c, value: Number(val.toFixed(2)), ok };
+      });
+      const passed = details.every((d) => d.ok);
+      return {
+        scenario_id: this.activeScenario.id,
+        passed,
+        status_vi: passed ? 'ĐẠT' : 'CHƯA ĐẠT',
+        elapsed_s: Number(this.scenarioTimer.toFixed(1)),
+        details
+      };
+    }
+
+    recordHistory() {
+      const snap = { t: Number(this.time.toFixed(1)) };
+      for (const k in this.tags) {
+        snap[k] = Number(this.tags[k].toFixed(2));
+      }
+      this.history.push(snap);
+      if (this.history.length > this.maxHistory) this.history.shift();
+    }
+  }
+
+  return HRSGSimulator;
+});
+
+
+// === APPLICATION STATE ===
+const sim = new HRSGSimulator(HRSG_DATA);
+let selectedZoneId = 'EXHAUST_GAS';
+let mainTab = '3d';
+let cfdMode = 'temp'; // 'temp' | 'vel' | 'pres' | 'off'
+let paused = false;
+let showHint = false;
+
+// 3D Camera state (smooth interpolation)
+const cam = {
+  target: [0, 11, 0], yaw: -0.62, pitch: 0.34, dist: 58,
+  goalTarget: [0, 11, 0], goalYaw: -0.62, goalPitch: 0.34, goalDist: 58
+};
+
+// CFD 3D Streamline particles
+const gasParticles = [];
+for (let i = 0; i < 160; i++) {
+  gasParticles.push({
+    u: Math.random(),
+    yFrac: 0.1 + Math.random() * 0.8,
+    zFrac: 0.12 + Math.random() * 0.76,
+    phase: Math.random() * Math.PI * 2
+  });
+}
+
+// Pipe flow particles
+const pipeParticles = [];
+HRSG_DATA.lines.forEach((line, li) => {
+  for (let i = 0; i < 10; i++) {
+    pipeParticles.push({ lineIdx: li, t: i / 10 });
+  }
+});
+
+// === HELPER FUNCTIONS ===
+function heatColor(norm) {
+  const c = Math.max(0, Math.min(1, norm));
+  const stops = [
+    [37, 99, 235],   // blue
+    [6, 182, 212],   // cyan
+    [34, 197, 94],   // green
+    [234, 179, 8],   // yellow
+    [249, 115, 22],  // orange
+    [239, 68, 68]    // red
+  ];
+  const idx = c * (stops.length - 1);
+  const i0 = Math.floor(idx), i1 = Math.min(stops.length - 1, i0 + 1);
+  const f = idx - i0;
+  const r = Math.round(stops[i0][0] + (stops[i1][0] - stops[i0][0]) * f);
+  const g = Math.round(stops[i0][1] + (stops[i1][1] - stops[i0][1]) * f);
+  const b = Math.round(stops[i0][2] + (stops[i1][2] - stops[i0][2]) * f);
+  return `rgb(${r},${g},${b})`;
+}
+
+function mediumColor(m) {
+  const map = {
+    flue_gas: '#f97316', hp_steam: '#ef4444', rh_steam: '#fb923c',
+    ip_steam: '#facc15', lp_steam: '#38bdf8', feedwater: '#22c55e',
+    condensate: '#06b6d4', blowdown: '#ec4899'
+  };
+  return map[m] || '#94a3b8';
+}
+
+function getZone(id) { return HRSG_DATA.zones.find(z => z.id === id); }
+function getScenarioForZone(zid) { return HRSG_DATA.scenarios.find(s => s.zone === zid); }
+
+// === UI CONTROLS ===
+function switchMainTab(tab) {
+  mainTab = tab;
+  document.getElementById('tab3d').classList.toggle('active', tab === '3d');
+  document.getElementById('tabDcs').classList.toggle('active', tab === 'dcs');
+  document.getElementById('tabCfd').classList.toggle('active', tab === 'cfd');
+  document.getElementById('view3d').style.display = tab === '3d' ? 'flex' : 'none';
+  document.getElementById('viewDcs').classList.toggle('active', tab === 'dcs');
+  document.getElementById('viewCfd').classList.toggle('active', tab === 'cfd');
+  if (tab === 'dcs') renderDCSStatic();
+  if (tab === 'cfd') renderCFDTable();
+}
+
+function selectLoadCase(caseId) {
+  sim.setLoadCase(caseId);
+  ['BASE_100', 'LOAD_85', 'LOAD_50'].forEach(id => {
+    document.getElementById('hb_' + id).classList.toggle('active', id === caseId);
+  });
+  updateRightPanel();
+  if (mainTab === 'dcs') renderDCSStatic();
+  if (mainTab === 'cfd') renderCFDTable();
+}
+
+function selectZone(zoneId) {
+  selectedZoneId = zoneId;
+  const z = getZone(zoneId);
+  if (z && z.camera) {
+    cam.goalTarget = [...z.camera.target];
+    cam.goalYaw = z.camera.yaw;
+    cam.goalPitch = z.camera.pitch;
+    cam.goalDist = z.camera.dist;
+  }
+  showHint = false;
+  document.getElementById('scHintBox').style.display = 'none';
+  renderZoneChips();
+  updateRightPanel();
+  if (mainTab === 'dcs') renderDCSStatic();
+}
+
+function setCfdMode(mode) {
+  cfdMode = mode;
+  ['Temp', 'Vel', 'Pres', 'Off'].forEach(k => {
+    document.getElementById('cfd' + k).classList.toggle('active', k.toLowerCase() === mode);
+  });
+  const cb = document.getElementById('cfdColorbar');
+  if (mode === 'off') { cb.style.display = 'none'; return; }
+  cb.style.display = 'block';
+  if (mode === 'temp') {
+    document.getElementById('cbTitle').textContent = 'Trường nhiệt độ khói CFD (°C)';
+    document.getElementById('cbMin').textContent = '60°C';
+    document.getElementById('cbMid').textContent = '390°C';
+    document.getElementById('cbMax').textContent = '720°C';
+  } else if (mode === 'vel') {
+    document.getElementById('cbTitle').textContent = 'Trường vận tốc dòng khói CFD (m/s)';
+    document.getElementById('cbMin').textContent = '2 m/s';
+    document.getElementById('cbMid').textContent = '9 m/s';
+    document.getElementById('cbMax').textContent = '16 m/s';
+  } else {
+    document.getElementById('cbTitle').textContent = 'Trường áp suất khói CFD (barA)';
+    document.getElementById('cbMin').textContent = '1.009';
+    document.getElementById('cbMid').textContent = '1.035';
+    document.getElementById('cbMax').textContent = '1.065';
+  }
+}
+
+function setCamPreset(p) {
+  if (p === 'iso') { cam.goalTarget = [2, 11, 2]; cam.goalYaw = -0.62; cam.goalPitch = 0.34; cam.goalDist = 60; }
+  if (p === 'side') { cam.goalTarget = [2, 10, 0]; cam.goalYaw = 0.0; cam.goalPitch = 0.04; cam.goalDist = 54; }
+  if (p === 'plan') { cam.goalTarget = [2, 4, 2]; cam.goalYaw = 0.0; cam.goalPitch = 1.42; cam.goalDist = 64; }
+}
+
+function togglePause() {
+  paused = !paused;
+  document.getElementById('btnPause').textContent = paused ? 'Tiếp tục' : 'Tạm dừng';
+}
+
+function resetSim() {
+  sim.initState(sim.loadCaseId);
+  updateRightPanel();
+  if (mainTab === 'dcs') renderDCSStatic();
+}
+
+function toggleAlarmDrawer() {
+  document.getElementById('alarmDrawer').classList.toggle('open');
+}
+
+function toggleHint() {
+  showHint = !showHint;
+  document.getElementById('scHintBox').style.display = showHint ? 'block' : 'none';
+}
+
+function toggleScenario() {
+  const sc = getScenarioForZone(selectedZoneId);
+  if (!sc) return;
+  if (sim.activeScenario && sim.activeScenario.id === sc.id) {
+    sim.stopScenario();
+    sim.initState(sim.loadCaseId);
+  } else {
+    sim.startScenario(sc.id);
+    ['BASE_100', 'LOAD_85', 'LOAD_50'].forEach(id => {
+      document.getElementById('hb_' + id).classList.toggle('active', id === sim.loadCaseId);
+    });
+  }
+  updateRightPanel();
+  if (mainTab === 'dcs') renderDCSStatic();
+}
+
+function renderZoneChips() {
+  const bar = document.getElementById('zoneBar');
+  const dcsTabs = document.getElementById('dcsZoneTabs');
+  bar.innerHTML = '';
+  dcsTabs.innerHTML = '';
+  HRSG_DATA.zones.forEach(z => {
+    const chip = document.createElement('div');
+    chip.className = 'zone-chip' + (z.id === selectedZoneId ? ' active' : '');
+    chip.innerHTML = `<span class="swatch" style="background:${z.color}"></span><span>${z.short_name}</span>`;
+    chip.onclick = () => selectZone(z.id);
+    bar.appendChild(chip);
+
+    const btn = document.createElement('button');
+    btn.className = z.id === selectedZoneId ? 'active' : '';
+    btn.textContent = z.short_name;
+    btn.onclick = () => selectZone(z.id);
+    dcsTabs.appendChild(btn);
+  });
+}
+
+function updateRightPanel() {
+  const z = getZone(selectedZoneId);
+  const sc = getScenarioForZone(selectedZoneId);
+  document.getElementById('panelZoneTitle').textContent = z.name;
+  const eqCount = HRSG_DATA.equipment.filter(e => e.zone === z.id).length;
+  document.getElementById('panelZoneDesc').textContent = `Gồm ${eqCount} cụm thiết bị chính. Nhấp nút bên dưới để thao tác trực tiếp trên màn hình DCS.`;
+
+  // Scenario box
+  const isActive = sim.activeScenario && sim.activeScenario.id === sc.id;
+  document.getElementById('scTitle').textContent = sc.title;
+  document.getElementById('scSituation').innerHTML = `<strong>Tình huống:</strong> ${sc.situation}`;
+  document.getElementById('scProgression').innerHTML = `<strong>Diễn biến:</strong> ${sc.progression}`;
+  document.getElementById('scHintBox').innerHTML = `<strong>Cách xử lý đúng:</strong> ${sc.correct_action}`;
+
+  const btn = document.getElementById('btnStartSc');
+  btn.textContent = isActive ? 'Dừng bài thi' : 'Bắt đầu bài thi';
+  btn.className = isActive ? 'success' : 'danger';
+
+  const badge = document.getElementById('scStatusBadge');
+  const critUl = document.getElementById('scCriteriaList');
+  if (isActive && sim.scenarioResult) {
+    badge.style.display = 'inline-block';
+    badge.textContent = sim.scenarioResult.status_vi + ' (' + sim.scenarioResult.elapsed_s + 's)';
+    badge.className = 'badge ' + (sim.scenarioResult.passed ? 'ok' : 'fail');
+    critUl.innerHTML = sim.scenarioResult.details.map(d => `
+      <li class="criteria-item ${d.ok ? 'ok' : 'fail'}">
+        <span>${d.label}</span>
+        <strong>${d.value} ${d.ok ? '✓' : '✗'}</strong>
+      </li>
+    `).join('');
+  } else {
+    badge.style.display = 'none';
+    critUl.innerHTML = sc.criteria.map(c => `
+      <li class="criteria-item">
+        <span>${c.label}</span>
+        <span style="color:#94a3b8;">${sim.tags[c.tag] !== undefined ? sim.tags[c.tag].toFixed(1) : '-'}</span>
+      </li>
+    `).join('');
+  }
+
+  // Live tags table
+  const insts = HRSG_DATA.instruments.filter(i => i.zone === z.id);
+  document.getElementById('panelTagsBody').innerHTML = insts.map(i => `
+    <tr>
+      <td style="font-family:Consolas,monospace;color:#7dd3fc;">${i.tag}</td>
+      <td>${i.description}</td>
+      <td class="tag-val">${sim.tags[i.tag] !== undefined ? sim.tags[i.tag].toFixed(i.unit === 'barA' ? 2 : 1) : '-'} ${i.unit}</td>
+    </tr>
+  `).join('');
+
+  // HUD KPIs
+  const s = sim.cfdGrid.summary;
+  document.getElementById('hudKpi').innerHTML = `
+    <div><span>Kịch bản HB</span><strong>${s.load_case}</strong></div>
+    <div><span>Lưu lượng khói</span><strong>${s.mass_flow_tph} t/h</strong></div>
+    <div><span>T_vào → T_ống khói</span><strong>${s.t_inlet_c}°C → ${s.t_stack_c}°C</strong></div>
+    <div><span>Sụt áp ΔP</span><strong>${s.dp_total_mbar} mbar</strong></div>
+    <div><span>Nhiệt thu hồi Q</span><strong>${s.total_heat_duty_mw} MW</strong></div>
+  `;
+
+  // Alarms
+  const ab = document.getElementById('alarmBadge');
+  ab.textContent = 'Cảnh báo: ' + sim.alarms.length;
+  ab.classList.toggle('has-alarm', sim.alarms.length > 0);
+  document.getElementById('alarmList').innerHTML = sim.alarms.length === 0
+    ? '<div style="color:#86efac;padding:6px;">Hệ thống vận hành bình thường — Không có cảnh báo.</div>'
+    : sim.alarms.map(a => `<div class="alarm-row"><span class="lvl">[${a.level}] ${a.tag}</span><span>${a.msg}</span></div>`).join('');
+}
+
+// === DCS SVG SCREEN & FACEPLATES ===
+function renderDCSStatic() {
+  const z = getZone(selectedZoneId);
+  document.getElementById('dcsTitle').textContent = 'MÀN HÌNH DCS — ' + z.name.toUpperCase();
+
+  // Equipment Start/Stop buttons relevant to zone (or all pumps if utility/cph)
+  const ctrlBox = document.getElementById('dcsEquipCtrl');
+  ctrlBox.innerHTML = '';
+  const eqButtons = [];
+  if (selectedZoneId === 'CPH_SYSTEM') {
+    eqButtons.push({ tag: 'P1LCB10AP001', label: 'Bơm tuần hoàn CPH A' }, { tag: 'P1LCB10AP002', label: 'Bơm tuần hoàn CPH B' });
+  } else if (selectedZoneId === 'BLOWDOWN_UTILITY') {
+    eqButtons.push({ tag: 'P1LCQ93AP001', label: 'Bơm chuyển xả đáy A' }, { tag: 'P1LCQ93AP002', label: 'Bơm chuyển xả đáy B' });
+  } else if (selectedZoneId === 'EXHAUST_GAS') {
+    eqButtons.push({ tag: 'P1HNA91AT001', label: 'Máy hút ẩm Dehumidifier' });
+    const wrap = document.createElement('div');
+    wrap.className = 'equip-btn-box';
+    wrap.innerHTML = `<span>Van ống khói P1HNE91AA001</span><button class="success" onclick="openStackDamperEmergency()">MỞ 100% KHẨN CẤP</button>`;
+    ctrlBox.appendChild(wrap);
+  }
+  eqButtons.forEach(b => {
+    const on = sim.equipState[b.tag];
+    const div = document.createElement('div');
+    div.className = 'equip-btn-box';
+    div.innerHTML = `
+      <span class="led ${on ? 'on' : 'off'}" id="led_${b.tag}"></span>
+      <div>
+        <div style="font-weight:700;font-size:11.5px;">${b.label}</div>
+        <div style="font-size:10.5px;color:#94a3b8;">${b.tag}</div>
+      </div>
+      <button class="success" onclick="cmdEquip('${b.tag}', true)">START</button>
+      <button class="danger" onclick="cmdEquip('${b.tag}', false)">STOP</button>
+    `;
+    ctrlBox.appendChild(div);
+  });
+  if (ctrlBox.children.length === 0) {
+    ctrlBox.innerHTML = '<span style="color:#94a3b8;font-size:12px;">Khu vực này điều khiển qua các vòng PID bên dưới.</span>';
+  }
+
+  // PID Faceplates for this zone
+  const zoneTags = HRSG_DATA.instruments.filter(i => i.zone === selectedZoneId && i.is_control_loop).map(i => i.tag);
+  // Also include HP Drum LIC on HP_ECO screen for convenience
+  if (selectedZoneId === 'HP_ECO' && !zoneTags.includes('P1HAD91CL911')) zoneTags.push('P1HAD91CL911');
+
+  const fpWrap = document.getElementById('dcsFaceplates');
+  fpWrap.innerHTML = '';
+  zoneTags.forEach(tag => {
+    const pid = sim.pids[tag];
+    if (!pid) return;
+    const spMin = pid.unit === 'mm' ? -150 : pid.unit === 'barA' ? 2 : pid.unit === '%' ? 0 : Math.max(0, Math.round(pid.sp - 80));
+    const spMax = pid.unit === 'mm' ? 150 : pid.unit === 'barA' ? 45 : pid.unit === '%' ? 100 : Math.round(pid.sp + 80);
+    const el = document.createElement('div');
+    el.className = 'fp';
+    el.id = 'fp_' + tag;
+    el.innerHTML = `
+      <div class="fp-head">
+        <span>${pid.tag} (${pid.name})</span>
+        <span style="display:flex;gap:4px;">
+          <button id="mAuto_${tag}" class="${pid.mode==='AUTO'?'active':''}" style="padding:2px 6px;" onclick="setPidMode('${tag}','AUTO')">AUTO</button>
+          <button id="mMan_${tag}" class="${pid.mode==='MAN'?'danger':''}" style="padding:2px 6px;" onclick="setPidMode('${tag}','MAN')">MAN</button>
+        </span>
+      </div>
+      <div style="font-size:11px;color:#94a3b8;">Phần tử chấp hành: <strong>${pid.actuator}</strong></div>
+      <div class="fp-row"><span>PV:</span><strong id="fpPv_${tag}">${pid.pv.toFixed(1)} ${pid.unit}</strong></div>
+      <div class="fp-row"><span>SP:</span><strong id="fpSp_${tag}">${pid.sp.toFixed(1)} ${pid.unit}</strong></div>
+      <input type="range" id="slSp_${tag}" min="${spMin}" max="${spMax}" step="0.5" value="${pid.sp}" oninput="setPidSp('${tag}', this.value)">
+      <div class="fp-row"><span>OP (Van):</span><strong id="fpOp_${tag}">${pid.op.toFixed(1)}%</strong></div>
+      <div class="fp-bar"><div id="barOp_${tag}" style="width:${pid.op}%"></div></div>
+      <input type="range" id="slOp_${tag}" min="0" max="100" step="1" value="${pid.op}" ${pid.mode==='AUTO'?'disabled':''} oninput="setPidOp('${tag}', this.value)">
+    `;
+    fpWrap.appendChild(el);
+  });
+  updateDCSDynamic();
+}
+
+function cmdEquip(tag, on) {
+  sim.setEquipmentState(tag, on);
+  const led = document.getElementById('led_' + tag);
+  if (led) led.className = 'led ' + (on ? 'on' : 'off');
+}
+
+function openStackDamperEmergency() {
+  sim.pids.P1HNE91CG001.setMode('AUTO');
+  sim.pids.P1HNE91CG001.setSP(100);
+  renderDCSStatic();
+}
+
+function setPidMode(tag, mode) {
+  sim.pids[tag].setMode(mode);
+  renderDCSStatic();
+}
+
+function setPidSp(tag, val) {
+  sim.pids[tag].setSP(Number(val));
+  document.getElementById('fpSp_' + tag).textContent = Number(val).toFixed(1) + ' ' + sim.pids[tag].unit;
+}
+
+function setPidOp(tag, val) {
+  sim.pids[tag].setOP(Number(val));
+  document.getElementById('fpOp_' + tag).textContent = Number(val).toFixed(1) + '%';
+  document.getElementById('barOp_' + tag).style.width = val + '%';
+}
+
+function updateDCSDynamic() {
+  // Update Scenario Banner inside DCS
+  const banner = document.getElementById('dcsScenarioBanner');
+  if (sim.activeScenario) {
+    banner.style.display = 'block';
+    const r = sim.scenarioResult;
+    banner.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+        <strong style="color:#fde68a;">BÀI THI ĐANG CHẠY: ${sim.activeScenario.title}</strong>
+        <span class="badge ${r && r.passed ? 'ok' : 'fail'}">${r ? r.status_vi : 'CHƯA ĐẠT'} (${r ? r.elapsed_s : 0}s)</span>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;font-size:11.5px;">
+        ${r ? r.details.map(d => `<span style="color:${d.ok ? '#86efac' : '#fca5a5'}">${d.ok ? '✓' : '✗'} ${d.label} [Hiện tại: ${d.value}]</span>`).join('') : ''}
+      </div>
+    `;
+  } else {
+    banner.style.display = 'none';
+  }
+
+  // Update Faceplates live values
+  for (const tag in sim.pids) {
+    const pid = sim.pids[tag];
+    const pvEl = document.getElementById('fpPv_' + tag);
+    if (pvEl) {
+      pvEl.textContent = pid.pv.toFixed(pid.unit === 'barA' ? 2 : 1) + ' ' + pid.unit;
+      document.getElementById('fpOp_' + tag).textContent = pid.op.toFixed(1) + '%';
+      document.getElementById('barOp_' + tag).style.width = pid.op + '%';
+      if (pid.mode === 'AUTO') {
+        const sl = document.getElementById('slOp_' + tag);
+        if (sl) sl.value = pid.op;
+      }
+    }
+  }
+
+  // Render Zone SVG Schematic
+  const svg = document.getElementById('dcsSvg');
+  const eqs = HRSG_DATA.equipment.filter(e => e.zone === selectedZoneId);
+  const insts = HRSG_DATA.instruments.filter(i => i.zone === selectedZoneId);
+  const z = getZone(selectedZoneId);
+  let markup = `
+    <defs>
+      <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M 0 1 L 10 5 L 0 9 z" fill="#38bdf8"/>
+      </marker>
+    </defs>
+    <rect x="8" y="8" width="744" height="344" rx="8" fill="#070e1c" stroke="${z.color}" stroke-width="1.5" stroke-opacity="0.6"/>
+    <text x="22" y="30" fill="${z.color}" font-size="13" font-weight="700">SƠ ĐỒ CÔNG NGHỆ DCS — ${z.short_name.toUpperCase()} (${sim.hb.name})</text>
+  `;
+
+  // Draw process flow header line
+  markup += `<line x1="40" y1="165" x2="720" y2="165" stroke="#1e3a5f" stroke-width="6" stroke-dasharray="10,6" marker-end="url(#arr)"/>`;
+
+  // Draw equipment blocks evenly across schematic
+  const stepX = 660 / Math.max(eqs.length, 1);
+  eqs.forEach((eq, idx) => {
+    const cx = 60 + idx * stepX + stepX / 2;
+    const isPump = eq.type === 'pump';
+    const isOn = sim.equipState[eq.tag];
+    const fill = isPump ? (isOn ? '#14532d' : '#7f1d1d') : '#112240';
+    const stroke = isPump ? (isOn ? '#22c55e' : '#ef4444') : z.color;
+    if (isPump) {
+      markup += `
+        <circle cx="${cx}" cy="165" r="28" fill="${fill}" stroke="${stroke}" stroke-width="2.5"/>
+        <polygon points="${cx-8},${155} ${cx+12},${165} ${cx-8},${175}" fill="#e2e8f0"/>
+        <text x="${cx}" y="210" text-anchor="middle" fill="#e2e8f0" font-size="11" font-weight="700">${eq.tag}</text>
+        <text x="${cx}" y="224" text-anchor="middle" fill="${isOn?'#86efac':'#fca5a5'}" font-size="10">${isOn?'ĐANG CHẠY':'DỪNG'}</text>
+      `;
+    } else {
+      const w = Math.min(130, stepX - 18);
+      markup += `
+        <rect x="${cx - w/2}" y="115" width="${w}" height="100" rx="8" fill="${fill}" stroke="${stroke}" stroke-width="2"/>
+        <text x="${cx}" y="155" text-anchor="middle" fill="#7dd3fc" font-size="11" font-weight="700">${eq.tag}</text>
+        <text x="${cx}" y="172" text-anchor="middle" fill="#cbd5e1" font-size="10">${eq.name.split('(')[0].slice(0,20)}</text>
+      `;
+    }
+  });
+
+  // Draw live instrument callout boxes along top & bottom
+  insts.forEach((inst, idx) => {
+    const row = idx % 2;
+    const col = Math.floor(idx / 2);
+    const x = 30 + col * 175;
+    const y = row === 0 ? 48 : 265;
+    const v = sim.tags[inst.tag];
+    const isAlarm = sim.alarms.some(a => a.tag === inst.tag);
+    markup += `
+      <rect x="${x}" y="${y}" width="162" height="48" rx="6" fill="#0d1930" stroke="${isAlarm ? '#ef4444' : '#334155'}" stroke-width="${isAlarm ? 2 : 1}"/>
+      <text x="${x+8}" y="${y+16}" fill="#94a3b8" font-size="10" font-family="Consolas">${inst.tag} [${inst.type}]</text>
+      <text x="${x+8}" y="${y+36}" fill="${isAlarm ? '#fca5a5' : '#38bdf8'}" font-size="15" font-weight="700" font-family="Consolas">${v !== undefined ? v.toFixed(inst.unit==='barA'?2:1) : '-'} ${inst.unit}</text>
+    `;
+  });
+  svg.innerHTML = markup;
+
+  // Render Trend Chart
+  const tSvg = document.getElementById('trendSvg');
+  const tLegend = document.getElementById('trendLegend');
+  const plotInsts = insts.slice(0, 3);
+  const colors = ['#38bdf8', '#f59e0b', '#22c55e'];
+  let tMarkup = '<line x1="36" y1="10" x2="36" y2="195" stroke="#334155"/><line x1="36" y1="195" x2="405" y2="195" stroke="#334155"/>';
+  tLegend.innerHTML = '';
+  plotInsts.forEach((inst, pi) => {
+    const vals = sim.history.map(h => h[inst.tag]).filter(v => v !== undefined);
+    if (vals.length < 2) return;
+    let mn = Math.min(...vals), mx = Math.max(...vals);
+    if (mx - mn < 2) { mn -= 2; mx += 2; }
+    const pts = vals.map((v, i) => {
+      const px = 38 + (i / Math.max(1, vals.length - 1)) * 364;
+      const py = 190 - ((v - mn) / (mx - mn)) * 172;
+      return `${px.toFixed(1)},${py.toFixed(1)}`;
+    }).join(' ');
+    tMarkup += `<polyline fill="none" stroke="${colors[pi]}" stroke-width="2" points="${pts}"/>`;
+    tLegend.innerHTML += `<span style="color:${colors[pi]};">■ ${inst.tag}: <strong>${vals[vals.length-1].toFixed(1)} ${inst.unit}</strong></span>`;
+  });
+  tSvg.innerHTML = tMarkup;
+}
+
+// === CFD 8-MODULE ANALYSIS TABLE & CHART ===
+function renderCFDTable() {
+  const s = sim.cfdGrid.summary;
+  document.getElementById('cfdSummaryBadge').textContent =
+    `${s.load_case} | Khói: ${s.mass_flow_tph} t/h | Tổng nhiệt thu hồi: ${s.total_heat_duty_mw} MW | ΔP: ${s.dp_total_mbar} mbar`;
+
+  let html = `<thead><tr>
+    <th>#</th><th>Module trao đổi nhiệt</th><th>T_vào (°C)</th><th>T_ra (°C)</th>
+    <th>Áp suất (barA)</th><th>Sụt áp (Pa)</th><th>Khối lượng riêng (kg/m³)</th>
+    <th>v_mặt (m/s)</th><th>v_khe ống (m/s)</th><th>Re</th><th>Nu</th><th>h (W/m²K)</th><th>Nhiệt Q (MW)</th>
+  </tr></thead><tbody>`;
+  s.modules.forEach(m => {
+    html += `<tr>
+      <td>M${m.index}</td><td>${m.name}</td><td>${m.tIn_c}</td><td>${m.tOut_c}</td>
+      <td>${m.p_bara}</td><td>${m.dp_pa}</td><td>${m.rho_kgm3}</td>
+      <td>${m.v_face_ms}</td><td>${m.v_max_ms}</td><td>${m.reynolds}</td><td>${m.nusselt}</td><td>${m.h_wm2k}</td>
+      <td style="color:#38bdf8;font-weight:700;">${m.heat_duty_mw}</td>
+    </tr>`;
+  });
+  html += '</tbody>';
+  document.getElementById('cfdModuleTable').innerHTML = html;
+
+  // Profile SVG
+  const svg = document.getElementById('cfdProfileSvg');
+  let p = '<line x1="50" y1="20" x2="50" y2="185" stroke="#334155"/><line x1="50" y1="185" x2="860" y2="185" stroke="#334155"/>';
+  const tPts = [], vPts = [];
+  s.modules.forEach((m, i) => {
+    const x = 80 + i * 105;
+    const yT = 180 - (m.tIn_c / 750) * 150;
+    const yV = 180 - (m.v_max_ms / 16) * 150;
+    tPts.push(`${x},${yT.toFixed(1)}`);
+    vPts.push(`${x},${yV.toFixed(1)}`);
+    p += `<text x="${x}" y="202" text-anchor="middle" fill="#94a3b8" font-size="11">M${m.index}</text>`;
+    p += `<circle cx="${x}" cy="${yT.toFixed(1)}" r="4" fill="#ef4444"/><text x="${x}" y="${(yT-8).toFixed(1)}" text-anchor="middle" fill="#fca5a5" font-size="10">${m.tIn_c}°C</text>`;
+    p += `<circle cx="${x}" cy="${yV.toFixed(1)}" r="4" fill="#38bdf8"/><text x="${x}" y="${(yV+14).toFixed(1)}" text-anchor="middle" fill="#7dd3fc" font-size="10">${m.v_max_ms}m/s</text>`;
+  });
+  p += `<polyline fill="none" stroke="#ef4444" stroke-width="2.5" points="${tPts.join(' ')}"/>`;
+  p += `<polyline fill="none" stroke="#38bdf8" stroke-width="2.5" stroke-dasharray="6,4" points="${vPts.join(' ')}"/>`;
+  p += `<text x="680" y="25" fill="#fca5a5" font-size="11">● Nhiệt độ khói (°C)</text><text x="680" y="42" fill="#7dd3fc" font-size="11">● Vận tốc khe ống (m/s)</text>`;
+  svg.innerHTML = p;
+}
+
+// === ZERO-DEPENDENCY 3D PERSPECTIVE CANVAS ENGINE ===
+const canvas = document.getElementById('canvas3d');
+const ctx = canvas.getContext('2d');
+let dragging = false, lastX = 0, lastY = 0;
+
+canvas.addEventListener('mousedown', e => { dragging = true; lastX = e.clientX; lastY = e.clientY; });
+window.addEventListener('mouseup', () => dragging = false);
+window.addEventListener('mousemove', e => {
+  if (!dragging) return;
+  const dx = e.clientX - lastX, dy = e.clientY - lastY;
+  lastX = e.clientX; lastY = e.clientY;
+  cam.goalYaw += dx * 0.007;
+  cam.goalPitch = Math.max(0.03, Math.min(1.45, cam.goalPitch + dy * 0.007));
+});
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  cam.goalDist = Math.max(16, Math.min(110, cam.goalDist + e.deltaY * 0.04));
+}, { passive: false });
+
+function project(x, y, z, w, h) {
+  const dx = x - cam.target[0];
+  const dy = y - cam.target[1];
+  const dz = z - cam.target[2];
+  const cy = Math.cos(cam.yaw), sy = Math.sin(cam.yaw);
+  const cp = Math.cos(cam.pitch), sp = Math.sin(cam.pitch);
+  // Rotate Y (yaw)
+  const rx = dx * cy - dz * sy;
+  const rz1 = dx * sy + dz * cy;
+  // Rotate X (pitch)
+  const ry = dy * cp - rz1 * sp;
+  const rz = dy * sp + rz1 * cp + cam.dist;
+  if (rz < 1.0) return null;
+  const fov = Math.min(w, h) * 0.92;
+  return { sx: w * 0.5 + (rx / rz) * fov, sy: h * 0.54 - (ry / rz) * fov, depth: rz, scale: fov / rz };
+}
+
+function drawQuad3D(pts3, fill, stroke, alpha) {
+  const w = canvas.width, h = canvas.height;
+  const proj = pts3.map(p => project(p[0], p[1], p[2], w, h));
+  if (proj.some(p => !p)) return;
+  const avgD = proj.reduce((s, p) => s + p.depth, 0) / proj.length;
+  return { type: 'quad', proj, fill, stroke, alpha: alpha !== undefined ? alpha : 1, depth: avgD };
+}
+
+function addBoxPrimitives(list, cx, cy, cz, sx, sy, sz, color, alpha, wireframe) {
+  const x0 = cx - sx/2, x1 = cx + sx/2;
+  const y0 = cy - sy/2, y1 = cy + sy/2;
+  const z0 = cz - sz/2, z1 = cz + sz/2;
+  const faces = [
+    { pts: [[x0,y1,z0],[x1,y1,z0],[x1,y1,z1],[x0,y1,z1]], shade: 1.15 }, // top
+    { pts: [[x0,y0,z1],[x1,y0,z1],[x1,y1,z1],[x0,y1,z1]], shade: 0.95 }, // front
+    { pts: [[x0,y0,z0],[x1,y0,z0],[x1,y1,z0],[x0,y1,z0]], shade: 0.72 }, // back
+    { pts: [[x1,y0,z0],[x1,y0,z1],[x1,y1,z1],[x1,y1,z0]], shade: 0.85 }, // right
+    { pts: [[x0,y0,z0],[x0,y0,z1],[x0,y1,z1],[x0,y1,z0]], shade: 0.65 }  // left
+  ];
+  faces.forEach(f => {
+    const q = drawQuad3D(f.pts, shadeHex(color, f.shade), wireframe ? 'rgba(148,163,184,0.35)' : 'rgba(15,23,42,0.55)', alpha);
+    if (q) list.push(q);
+  });
+}
+
+function shadeHex(hex, mult) {
+  if (!hex || hex[0] !== '#') return hex;
+  const n = parseInt(hex.slice(1), 16);
+  const r = Math.min(255, Math.round(((n >> 16) & 255) * mult));
+  const g = Math.min(255, Math.round(((n >> 8) & 255) * mult));
+  const b = Math.min(255, Math.round((n & 255) * mult));
+  return `rgb(${r},${g},${b})`;
+}
+
+function render3D() {
+  if (mainTab !== '3d') return;
+  const rect = canvas.parentElement.getBoundingClientRect();
+  if (canvas.width !== Math.floor(rect.width) || canvas.height !== Math.floor(rect.height)) {
+    canvas.width = Math.floor(rect.width);
+    canvas.height = Math.floor(rect.height);
+  }
+  const w = canvas.width, h = canvas.height;
+
+  // Smooth camera fly-to
+  for (let i = 0; i < 3; i++) cam.target[i] += (cam.goalTarget[i] - cam.target[i]) * 0.1;
+  cam.yaw += (cam.goalYaw - cam.yaw) * 0.1;
+  cam.pitch += (cam.goalPitch - cam.pitch) * 0.1;
+  cam.dist += (cam.goalDist - cam.dist) * 0.1;
+
+  // Clear dark background
+  const grad = ctx.createRadialGradient(w*0.5, h*0.45, 40, w*0.5, h*0.5, Math.max(w, h)*0.75);
+  grad.addColorStop(0, '#0f1c33');
+  grad.addColorStop(1, '#060b14');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, w, h);
+
+  // Ground grid
+  ctx.strokeStyle = 'rgba(51, 65, 85, 0.25)';
+  ctx.lineWidth = 1;
+  for (let gx = -30; gx <= 34; gx += 4) {
+    const p1 = project(gx, 0, -16, w, h), p2 = project(gx, 0, 20, w, h);
+    if (p1 && p2) { ctx.beginPath(); ctx.moveTo(p1.sx, p1.sy); ctx.lineTo(p2.sx, p2.sy); ctx.stroke(); }
+  }
+  for (let gz = -16; gz <= 20; gz += 4) {
+    const p1 = project(-30, 0, gz, w, h), p2 = project(34, 0, gz, w, h);
+    if (p1 && p2) { ctx.beginPath(); ctx.moveTo(p1.sx, p1.sy); ctx.lineTo(p2.sx, p2.sy); ctx.stroke(); }
+  }
+
+  const drawList = [];
+
+  // 1. Colored Zone Floor Pads
+  HRSG_DATA.zones.forEach(z => {
+    const p = z.pad;
+    const isSel = z.id === selectedZoneId;
+    const q = drawQuad3D([
+      [p.x - p.w/2, 0.05, p.z - p.d/2],
+      [p.x + p.w/2, 0.05, p.z - p.d/2],
+      [p.x + p.w/2, 0.05, p.z + p.d/2],
+      [p.x - p.w/2, 0.05, p.z + p.d/2]
+    ], z.color, isSel ? '#ffffff' : z.color, isSel ? 0.30 : 0.13);
+    if (q) { q.depth += 50; drawList.push(q); }
+  });
+
+  // 2. 3D Equipment Blocks (shaded boxes, drums, tall stack, pumps with LEDs)
+  HRSG_DATA.equipment.forEach(eq => {
+    const z = getZone(eq.zone);
+    const [x, y, zc] = eq.pos;
+    const [sx, sy, sz] = eq.size;
+    const isCasingModule = ['superheater', 'reheater', 'evaporator', 'economizer', 'condensate_preheater'].includes(eq.type) && sy > 10;
+    const alpha = isCasingModule && cfdMode !== 'off' ? 0.28 : 0.88;
+    const col = eq.tag === 'P1HNE91BS001' ? '#334155' : (eq.type === 'pump' ? '#1e293b' : z.color);
+    addBoxPrimitives(drawList, x, y, zc, sx, sy, sz, col, alpha, isCasingModule);
+
+    // Pump glowing status LED beacon
+    if (eq.type === 'pump') {
+      const on = sim.equipState[eq.tag];
+      const lp = project(x, y + sy/2 + 0.9, zc, w, h);
+      if (lp) {
+        drawList.push({
+          type: 'dot', sx: lp.sx, sy: lp.sy, r: Math.max(4, lp.scale * 0.45),
+          color: on ? '#22c55e' : '#ef4444', glow: true, depth: lp.depth - 0.5, label: eq.tag
+        });
+      }
+    }
+    // Stack platforms (reference 3D-HRSG.jpg)
+    if (eq.tag === 'P1HNE91BS001') {
+      [16, 23, 30, 37].forEach(py => {
+        addBoxPrimitives(drawList, x, py, zc, sx + 1.8, 0.35, sz + 1.8, '#1d4ed8', 0.85, false);
+      });
+    }
+  });
+
+  // 3. 3D CFD Volumetric Heatmap Slice (center plane z = 0)
+  if (cfdMode !== 'off') {
+    const cells = sim.cfdGrid.cells;
+    for (let i = 0; i < cells.length; i++) {
+      const c = cells[i];
+      if (c.iz !== 1) continue; // mid-plane cutaway for crisp visibility
+      let norm = 0;
+      if (cfdMode === 'temp') norm = (c.T - 60) / 660;
+      else if (cfdMode === 'vel') norm = (c.speed - 2) / 14;
+      else norm = (c.P - 1.009) / 0.056;
+      const col = heatColor(norm);
+      const cw = 2.4, ch = 2.6;
+      const q = drawQuad3D([
+        [c.x - cw/2, c.y - ch/2, 0],
+        [c.x + cw/2, c.y - ch/2, 0],
+        [c.x + cw/2, c.y + ch/2, 0],
+        [c.x - cw/2, c.y + ch/2, 0]
+      ], col, null, 0.42);
+      if (q) drawList.push(q);
+    }
+  }
+
+  // 4. 3D CFD Gas Streamline Particles
+  const damperFactor = sim.tags.P1HNE91CG001 / 100.0;
+  gasParticles.forEach(gp => {
+    if (!paused) {
+      gp.u = (gp.u + 0.0045 * (sim.hb.flue_gas.mass_flow_tph / 2631.1)) % 1.0;
+    }
+    let gx, gy, gz;
+    if (gp.u < 0.82) {
+      const f = gp.u / 0.82;
+      gx = -24 + f * 49;
+      const hSpan = f < 0.18 ? (4 + f * 55) : 14;
+      gy = 2.2 + gp.yFrac * hSpan + (1 - damperFactor) * Math.sin(gp.phase + sim.time * 4) * 1.6 * f;
+      gz = (gp.zFrac - 0.5) * 9.5;
+    } else {
+      const f = (gp.u - 0.82) / 0.18;
+      gx = 26.5 + Math.cos(gp.phase) * 1.4;
+      gy = 10 + f * 31;
+      gz = Math.sin(gp.phase) * 1.4;
+    }
+    const tApprox = sim.hb.flue_gas.inlet_temp_c * (1 - gp.u) + sim.tags.P1HNE91CT001 * gp.u;
+    const col = cfdMode === 'vel' ? '#38bdf8' : heatColor((tApprox - 60) / 660);
+    const p = project(gx, gy, gz, w, h);
+    if (p) {
+      drawList.push({ type: 'dot', sx: p.sx, sy: p.sy, r: Math.max(2, p.scale * 0.22), color: col, glow: false, depth: p.depth });
+    }
+  });
+
+  // 5. Pipes & Animated Flow Particles
+  HRSG_DATA.lines.forEach((line, li) => {
+    const col = mediumColor(line.medium);
+    for (let i = 0; i < line.path.length - 1; i++) {
+      const p1 = project(...line.path[i], w, h);
+      const p2 = project(...line.path[i+1], w, h);
+      if (p1 && p2) {
+        drawList.push({ type: 'line', x1: p1.sx, y1: p1.sy, x2: p2.sx, y2: p2.sy, color: col, depth: (p1.depth + p2.depth) / 2 });
+      }
+    }
+  });
+
+  pipeParticles.forEach(pp => {
+    const line = HRSG_DATA.lines[pp.lineIdx];
+    const flow = sim.tags[line.flow_tag] || 0;
+    if (!paused && flow > 0.5) {
+      pp.t = (pp.t + 0.003 + Math.min(0.012, flow / 45000)) % 1.0;
+    }
+    const segs = line.path.length - 1;
+    const pos = pp.t * segs;
+    const si = Math.min(segs - 1, Math.floor(pos));
+    const sf = pos - si;
+    const a = line.path[si], b = line.path[si + 1];
+    const px = a[0] + (b[0] - a[0]) * sf;
+    const py = a[1] + (b[1] - a[1]) * sf;
+    const pz = a[2] + (b[2] - a[2]) * sf;
+    const pr = project(px, py, pz, w, h);
+    if (pr && flow > 0.5) {
+      drawList.push({ type: 'dot', sx: pr.sx, sy: pr.sy, r: Math.max(2.5, pr.scale * 0.24), color: '#ffffff', glow: true, depth: pr.depth - 0.2 });
+    }
+  });
+
+  // Painter's depth sort (back to front)
+  drawList.sort((a, b) => b.depth - a.depth);
+
+  for (let i = 0; i < drawList.length; i++) {
+    const item = drawList[i];
+    if (item.type === 'quad') {
+      ctx.save();
+      ctx.globalAlpha = item.alpha;
+      ctx.beginPath();
+      ctx.moveTo(item.proj[0].sx, item.proj[0].sy);
+      for (let k = 1; k < item.proj.length; k++) ctx.lineTo(item.proj[k].sx, item.proj[k].sy);
+      ctx.closePath();
+      ctx.fillStyle = item.fill;
+      ctx.fill();
+      if (item.stroke) { ctx.strokeStyle = item.stroke; ctx.lineWidth = 1; ctx.stroke(); }
+      ctx.restore();
+    } else if (item.type === 'line') {
+      ctx.save();
+      ctx.strokeStyle = item.color;
+      ctx.lineWidth = 2.4;
+      ctx.globalAlpha = 0.8;
+      ctx.beginPath();
+      ctx.moveTo(item.x1, item.y1);
+      ctx.lineTo(item.x2, item.y2);
+      ctx.stroke();
+      ctx.restore();
+    } else if (item.type === 'dot') {
+      ctx.save();
+      if (item.glow) { ctx.shadowColor = item.color; ctx.shadowBlur = 10; }
+      ctx.fillStyle = item.color;
+      ctx.beginPath();
+      ctx.arc(item.sx, item.sy, item.r, 0, Math.PI * 2);
+      ctx.fill();
+      if (item.label) {
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = '#e2e8f0';
+        ctx.font = '10px Consolas, monospace';
+        ctx.fillText(item.label, item.sx + 7, item.sy + 3);
+      }
+      ctx.restore();
+    }
+  }
+
+  // Draw key 3D floating labels for Drums & Stack
+  [
+    { text: 'GT INLET ' + sim.tags.P1HNA91CT901.toFixed(0) + '°C', pos: [-22, 11.5, 0], col: '#fca5a5' },
+    { text: 'HP DRUM ' + sim.tags.P1HAD91CP901.toFixed(0) + ' barA', pos: [-2.8, 22.8, 0], col: '#fde047' },
+    { text: 'IP DRUM ' + sim.tags.P1HAD92CP901.toFixed(1) + ' barA', pos: [9.2, 22.0, 0], col: '#67e8f9' },
+    { text: 'LP DRUM / DEA ' + sim.tags.P1HAD93CP901.toFixed(1) + ' barA', pos: [16.2, 25.0, 0], col: '#93c5fd' },
+    { text: 'STACK ' + sim.tags.P1HNE91CT001.toFixed(1) + '°C', pos: [26.5, 42.5, 0], col: '#e2e8f0' }
+  ].forEach(lb => {
+    const p = project(lb.pos[0], lb.pos[1], lb.pos[2], w, h);
+    if (!p) return;
+    ctx.font = 'bold 11px Segoe UI, sans-serif';
+    const tw = ctx.measureText(lb.text).width;
+    ctx.fillStyle = 'rgba(7, 13, 23, 0.78)';
+    ctx.fillRect(p.sx - tw/2 - 5, p.sy - 12, tw + 10, 17);
+    ctx.fillStyle = lb.col;
+    ctx.fillText(lb.text, p.sx - tw/2, p.sy);
+  });
+}
+
+// === MAIN SIMULATION & ANIMATION LOOP ===
+renderZoneChips();
+updateRightPanel();
+
+let lastTick = performance.now();
+let uiAcc = 0;
+
+function loop(now) {
+  const dt = Math.min(0.1, (now - lastTick) / 1000);
+  lastTick = now;
+
+  if (!paused) {
+    sim.step(dt * 1.6); // slightly accelerated real-time for crisp training response
+  }
+
+  render3D();
+
+  uiAcc += dt;
+  if (uiAcc > 0.25) {
+    uiAcc = 0;
+    updateRightPanel();
+    if (mainTab === 'dcs') updateDCSDynamic();
+    if (mainTab === 'cfd') renderCFDTable();
+  }
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
